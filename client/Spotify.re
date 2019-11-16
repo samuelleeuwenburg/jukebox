@@ -16,6 +16,10 @@ let authenticate = () => {
     goToUrl(url);
 };
 
+type user = {
+    id: string
+};
+
 type image = {
     url: string,
     height: int,
@@ -97,6 +101,11 @@ module Decode = {
             name: json |> field("name", string)
         };
 
+    let user = json =>
+        Json.Decode.{
+            id: json |> field("id", string),
+        };
+
     let player = json =>
         Json.Decode.{
             device: json |> field("device", device),
@@ -128,6 +137,27 @@ let getTracks = (token: string, query: string) => {
     );
 };
 
+let getUser = (token: string) => {
+    let url = baseUrl ++ "/me";
+
+    Js.Promise.(
+        Fetch.fetchWithInit(
+            url,
+            Fetch.RequestInit.make(
+                ~method_=Get,
+                ~headers=Fetch.HeadersInit.make({"Authorization": "Bearer " ++ token}),
+                ()
+            )
+        )
+        |> then_(Fetch.Response.json)
+        |> then_(json => json |> Decode.user |> (user => Some(user) |> resolve))
+        |> catch(err => {
+            Js.log(err);
+            resolve(None)
+        })
+    );
+}
+
 let getPlayer = (token: string) => {
     let url = baseUrl ++ "/me/player";
 
@@ -150,14 +180,15 @@ let getPlayer = (token: string) => {
 };
 
 
-//@TODO use songUri from arguments
-let playTrack = (token: string, _songUri: string) => {
+let playTrack = (token: string, songUri: string, positionMs: int) => {
     let url = baseUrl ++ "/me/player/play";
-
     let payload = Js.Dict.empty();
-    Js.Dict.set(payload, "uris", Js.Json.array([|
-        Js.Json.string("spotify:track:6qfovhuEiazhpsIe4UqirU")
-    |]));
+
+    Js.Dict.set(payload, "uris", Js.Json.array([|Js.Json.string(songUri)|]));
+
+    if (positionMs !== 0) {
+        Js.Dict.set(payload, "position_ms", Js.Json.number(positionMs |> float_of_int));
+    }
 
     Js.Promise.(
         Fetch.fetchWithInit(
