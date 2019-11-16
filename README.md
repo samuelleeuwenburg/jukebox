@@ -8,26 +8,23 @@ The idea is to revive an old jukebox app that used to be available on the Spotif
 - vote on songs (one vote per user)
 - refresh token before it expires
 
-## Run
+## Run client
 
 ```sh
 npm install
-npm run server
+npm run client:server
 # in a new tab
-npm start
+npm run client:start
 ```
 
-# Bundle for Production
-
-We've included a convenience `UNUSED_webpack.config.js`, in case you want to ship your project to production. You can rename and/or remove that in favor of other bundlers, e.g. Rollup.
-
-We've also provided a barebone `indexProduction.html`, to serve your bundle.
+## Run server
 
 ```sh
-npm install webpack webpack-cli
-# rename file
-mv UNUSED_webpack.config.js webpack.config.js
-# call webpack to bundle for production
-./node_modules/.bin/webpack
-open indexProduction.html
+npm run server:dev
+```
+
+## Build client & server
+```sh
+npm run client:build
+npm run server:build
 ```

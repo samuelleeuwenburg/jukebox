@@ -2,7 +2,7 @@
   "name": "jukebox",
   "version": "0.1.0",
   "scripts": {
-    "client:build": "bsb -make-world",
+    "client:build": "bsb -make-world && webpack",
     "client:start": "bsb -make-world -w -ws _ ",
     "client:clean": "bsb -clean-world",
     "client:server": "moduleserve ./ --port 8000",
@@ -35,7 +35,9 @@
     "reason-react": ">=0.7.0",
     "sqlite3": "^4.1.0",
     "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.7.2"
+    "typescript": "^3.7.2",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
   },
   "devDependencies": {
     "bs-platform": "^5.2.1",

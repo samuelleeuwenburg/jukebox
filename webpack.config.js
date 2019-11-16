@@ -8,7 +8,7 @@ module.exports = {
   // you didn't know this
   mode: 'production',
   output: {
-    path: path.join(__dirname, "bundleOutput"),
-    filename: 'index.js',
+    path: path.join(__dirname, "build"),
+    filename: 'client.js',
   },
 };
