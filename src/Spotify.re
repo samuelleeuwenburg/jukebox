@@ -150,12 +150,14 @@ let getPlayer = (token: string) => {
 };
 
 
-// @TODO: wont play yet
+//@TODO use songUri from arguments
 let playTrack = (token: string, _songUri: string) => {
     let url = baseUrl ++ "/me/player/play";
 
     let payload = Js.Dict.empty();
-    Js.Dict.set(payload, "context_uri", Js.Json.string("spotify:track:7CcaktZZsdb8AWPdhDM38f"));
+    Js.Dict.set(payload, "uris", Js.Json.array([|
+        Js.Json.string("spotify:track:6qfovhuEiazhpsIe4UqirU")
+    |]));
 
     Js.Promise.(
         Fetch.fetchWithInit(
@@ -163,7 +165,12 @@ let playTrack = (token: string, _songUri: string) => {
             Fetch.RequestInit.make(
                 ~method_=Put,
                 ~body=Fetch.BodyInit.make(Js.Json.stringify(Js.Json.object_(payload))),
-                ~headers=Fetch.HeadersInit.make({"Authorization": "Bearer " ++ token}),
+                ~headers=Fetch.HeadersInit.make({
+                    "Authorization": "Bearer " ++ token,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+
+                }),
                 ()
             )
         )
