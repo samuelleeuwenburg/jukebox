@@ -12,11 +12,12 @@ module Track = {
         });
 
         <li>
+            <button onClick={_ => playTrack()}>{React.string("play")}</button>
+            <button onClick={_ => addTrack()}>{React.string("add")}</button>
+            {React.string(" | ")}
             <strong>{React.string(artist.name)}</strong>
             {React.string(" - ")}
             {React.string(track.name)}
-            <button onClick={_ => playTrack()}>{React.string("play")}</button>
-            <button onClick={_ => addTrack()}>{React.string("add")}</button>
         </li>
     };
 };
@@ -39,10 +40,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
 
     let results = state.results
     ->Belt.Option.flatMap(results => {
-        open Spotify;
-        state.user->Belt.Option.map(user => {
-            (results, user)
-        });
+        state.user->Belt.Option.map(user => (results, user));
     })
     ->Belt.Option.map(values => {
         open Spotify;

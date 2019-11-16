@@ -1,10 +1,46 @@
 let baseUrl = "http://127.0.0.1:3000/api";
 
-module Decode = {
+type track = {
+    name: string
 };
 
-let getQueue = () => {};
-let getNow = () => {};
+type queue = {
+    tracks: list(track)
+};
+
+module Decode = {
+    let track = json =>
+        Json.Decode.{
+            name: json |> field("name", string)
+        };
+
+    let queue = json =>
+        Json.Decode.{
+            tracks: json |> field("tracks", list(track))
+        };
+};
+
+let getQueue = () => {
+    let url = baseUrl ++ "/queue";
+
+    Js.Promise.(
+        Fetch.fetchWithInit(
+            url,
+            Fetch.RequestInit.make(
+                ~method_=Get,
+                ~headers=Fetch.HeadersInit.make({
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }),
+                ()
+            )
+        )
+        |> then_(Fetch.Response.json)
+        |> then_(json => json |> Decode.queue |> resolve)
+    );
+};
+
+// let _getNow = () => {};
 
 let addTrack = (user: Spotify.user, track: Spotify.track) => {
     let url = baseUrl ++ "/queue";
@@ -33,5 +69,5 @@ let addTrack = (user: Spotify.user, track: Spotify.track) => {
     );
 };
 
-let vote = (user: Spotify.user, track: Spotify.track) => {};
+// let _vote = (_user: Spotify.user, _track: Spotify.track) => {};
 
