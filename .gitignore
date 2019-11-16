@@ -1,8 +1,9 @@
+build
+jukebox.db
 .DS_Store
 *.bs.js
 .merlin
 .bsb.lock
-build
 npm-debug.log
 /lib/bs/
 /node_modules/
