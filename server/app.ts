@@ -15,7 +15,7 @@ db.run("CREATE TABLE IF NOT EXISTS votes (id INTEGER PRIMARY KEY, user_id TEXT, 
 app.use(cors());
 app.use(bodyParser.json());
 
-app.get('/queue', function (req, res) {
+app.get('/api/queue', function (req, res) {
     const sql = "SELECT * FROM queue";
 
     db.all(sql, (err, rows) => {
@@ -25,7 +25,7 @@ app.get('/queue', function (req, res) {
     });
 });
 
-app.post('/queue', (req, res) => {
+app.post('/api/queue', (req, res) => {
     const body = req.body
     db.run(`INSERT INTO queue (track_name, track_id, duration_ms, user_id) VALUES("${body.track_name}", "${body.track_id}", "${body.duration_ms}", "${body.user_id}")`)
 
