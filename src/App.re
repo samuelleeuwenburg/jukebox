@@ -1,6 +1,7 @@
 type state = {
     query: string,
     results: option(Spotify.response(Spotify.track)),
+    player: option(Spotify.player)
 };
 
 type action =
@@ -11,6 +12,7 @@ type action =
 let initialState = {
     query: "",
     results: None,
+    player: None,
 };
 
 let reducer = (state, action) => {
@@ -25,6 +27,17 @@ let reducer = (state, action) => {
 let make = (~token: string) => {
     let (state, dispatch) = React.useReducer(reducer, initialState);
 
+    React.useEffect0(() => {
+        Js.Promise.(
+            Spotify.getPlayer(token)
+            |> then_(player => {
+                Js.log(player);
+                resolve("")
+            })
+        ) |> ignore;
+        None;
+    });
+
     let getTracks = React.useCallback1(() => {
         Js.Promise.(
             Spotify.getTracks(token, state.query)
@@ -37,6 +50,11 @@ let make = (~token: string) => {
             })
         ) |> ignore;
     }, [|state.query|]);
+
+    let playSong = React.useCallback0(() => {
+        Spotify.playTrack(token, "")
+        |> ignore;
+    })
 
     let results = state.results
     ->Belt.Option.map(results => {
@@ -64,6 +82,9 @@ let make = (~token: string) => {
         />
         <button onClick={_ => getTracks()}>
             {React.string("search")}
+        </button>
+        <button onClick={_ => playSong()}>
+            {React.string("playSong")}
         </button>
         {results}
     </>

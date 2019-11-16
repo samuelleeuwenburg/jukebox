@@ -1,6 +1,6 @@
 let baseUrl = "https://api.spotify.com/v1";
 let clientId = "4f8a771ca0aa41b28424ad9fc737dacc";
-let scopes = "user-read-private user-read-email";
+let scopes = "user-modify-playback-state user-read-playback-state user-read-private user-read-email";
 let redirectUrl = "http://127.0.0.1:8000";
 
 let authenticate = () => {
@@ -32,11 +32,24 @@ type album = {
 }
 
 type track = {
+    id: string,
+    uri: string,
     name: string,
     artists: list(artist),
     album: album,
     durationMs: int,
 }
+
+type device = {
+    id: string,
+    name: string
+}
+
+type player = {
+    device: device,
+    isPlaying: bool,
+    progressMs: int
+};
 
 type response('a) = {
     items: list('a),
@@ -64,6 +77,8 @@ module Decode = {
 
     let track = json =>
         Json.Decode.{
+            id: json |> field("id", string),
+            uri: json |> field("uri", string),
             name: json |> field("name", string),
             artists: json |> field("artists", list(artist)),
             album: json |> field("album", album),
@@ -74,6 +89,19 @@ module Decode = {
         Json.Decode.{
             items: json |> at(["tracks", "items"], list(track)),
             total: json |> at(["tracks", "total"], int)
+        };
+
+    let device = json =>
+        Json.Decode.{
+            id: json |> field("id", string),
+            name: json |> field("name", string)
+        };
+
+    let player = json =>
+        Json.Decode.{
+            device: json |> field("device", device),
+            isPlaying: json |> field("is_playing", bool),
+            progressMs: json |> field("progress_ms", int),
         };
 };
 
@@ -99,4 +127,52 @@ let getTracks = (token: string, query: string) => {
         })
     );
 };
+
+let getPlayer = (token: string) => {
+    let url = baseUrl ++ "/me/player";
+
+    Js.Promise.(
+        Fetch.fetchWithInit(
+            url,
+            Fetch.RequestInit.make(
+                ~method_=Get,
+                ~headers=Fetch.HeadersInit.make({"Authorization": "Bearer " ++ token}),
+                ()
+            )
+        )
+        |> then_(Fetch.Response.json)
+        |> then_(json => json |> Decode.player |> (player => Some(player) |> resolve))
+        |> catch(err => {
+            Js.log(err);
+            resolve(None)
+        })
+    );
+};
+
+
+// @TODO: wont play yet
+let playTrack = (token: string, _songUri: string) => {
+    let url = baseUrl ++ "/me/player/play";
+
+    let payload = Js.Dict.empty();
+    Js.Dict.set(payload, "context_uri", Js.Json.string("spotify:track:7CcaktZZsdb8AWPdhDM38f"));
+
+    Js.Promise.(
+        Fetch.fetchWithInit(
+            url,
+            Fetch.RequestInit.make(
+                ~method_=Put,
+                ~body=Fetch.BodyInit.make(Js.Json.stringify(Js.Json.object_(payload))),
+                ~headers=Fetch.HeadersInit.make({"Authorization": "Bearer " ++ token}),
+                ()
+            )
+        )
+        |> then_(Fetch.Response.json)
+        |> then_(json => json |> Decode.player |> (player => Some(player) |> resolve))
+        |> catch(err => {
+            Js.log(err);
+            resolve(None)
+        })
+    );
+}
 
