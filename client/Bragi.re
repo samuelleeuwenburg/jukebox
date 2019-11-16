@@ -1,4 +1,4 @@
-let baseUrl = "http://127.0.0.1:3000/api";
+let baseUrl = "http://127.0.0.1:3000";
 
 type track = {
     name: string
@@ -56,12 +56,9 @@ let addTrack = (user: Spotify.user, track: Spotify.track) => {
         Fetch.fetchWithInit(
             url,
             Fetch.RequestInit.make(
-                ~method_=Put,
+                ~method_=Post,
                 ~body=Fetch.BodyInit.make(Js.Json.stringify(Js.Json.object_(payload))),
-                ~headers=Fetch.HeadersInit.make({
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                }),
+                ~headers=Fetch.HeadersInit.make({"Content-Type": "application/json"}),
                 ()
             )
         )

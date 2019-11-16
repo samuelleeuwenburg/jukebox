@@ -1,6 +1,7 @@
 import express = require('express');
 import sqlite3 = require('sqlite3');
 import bodyParser = require('body-parser');
+import cors = require('cors');
 const app: express.Application = express();
 
 const db = new sqlite3.Database('./jukebox.db', err => {
@@ -11,6 +12,7 @@ const db = new sqlite3.Database('./jukebox.db', err => {
 db.run("CREATE TABLE IF NOT EXISTS queue (id INTEGER PRIMARY KEY, track_name TEXT, track_id TEXT, duration_ms INTEGER, user_id TEXT, last_updated TIMESTAMP)");
 db.run("CREATE TABLE IF NOT EXISTS votes (id INTEGER PRIMARY KEY, user_id TEXT, track_id INTEGER)");
 
+app.use(cors());
 app.use(bodyParser.json());
 
 app.get('/queue', function (req, res) {
