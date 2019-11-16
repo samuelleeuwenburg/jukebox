@@ -1,14 +1,31 @@
 import express = require('express');
 import sqlite3 = require('sqlite3');
+import bodyParser = require('body-parser');
 const app: express.Application = express();
 
-const db = new sqlite3.Database('./jukebox.db', sqlite3.OPEN_READWRITE, err => {
+const db = new sqlite3.Database('./jukebox.db', err => {
     err ? console.error(err.message)
         : console.log('Connected to jukebox.db database');
 });
 
-app.get('/', function (req, res) {
-    res.send('Hello World!!');
+db.run("CREATE TABLE IF NOT EXISTS queue (id INTEGER PRIMARY_KEY, track_name TEXT, track_id TEXT, duration_ms INTEGER, user_id TEXT, last_updated TIMESTAMP)")
+db.run("CREATE TABLE IF NOT EXISTS votes (id INTEGER PRIMARY_KEY, user_id TEXT, track_id INTEGER)")
+
+app.use(bodyParser.json());
+
+app.get('/queue', function (req, res) {
+    const sql = "SELECT * FROM queue";
+
+    db.all(sql, (err, rows) => {
+        res.send(rows)
+    });
+});
+
+app.post('/queue', (req, res) => {
+    const body = req.body
+    db.run(`INSERT INTO queue (id, track_name, track_id, duration_ms, user_id, last_updated) VALUES("${body.id}", "${body.track_name}", "${body.track_id}", "${body.duration_ms}", "${body.user_id}", "${body.last_updated}")`)
+
+    res.send('item set')
 });
 
 app.listen(3000, function () {
