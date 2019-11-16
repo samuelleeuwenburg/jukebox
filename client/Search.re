@@ -40,7 +40,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         Js.Promise.(
             Spotify.getTracks(token, state.query)
             |> then_(tracks => {
-                dispatch(Success(tracks));
+                dispatch(Types.UpdateResults(tracks));
                 resolve(tracks)
             })
         ) |> ignore;

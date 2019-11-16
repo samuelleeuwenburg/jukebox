@@ -12,7 +12,7 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.UpdatePlayer(player) => {...state, player: Some(player)}
     | Types.UpdateUser(user) => {...state, user: Some(user)}
     | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
-    | Types.Success(response) => {...state, results: Some(response)}
+    | Types.UpdateResults(response) => {...state, results: Some(response)}
     | Types.ClearSearch => {...state, query: "", results: None}
     | Types.Error => state
     };

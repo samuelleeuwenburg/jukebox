@@ -8,7 +8,7 @@ type state = {
 
 type action =
     | UpdateQuery(string)
-    | Success(Spotify.response(Spotify.track))
+    | UpdateResults(Spotify.response(Spotify.track))
     | UpdatePlayer(Spotify.player)
     | UpdateUser(Spotify.user)
     | UpdateQueue(Bragi.queue)

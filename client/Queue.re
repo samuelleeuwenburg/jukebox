@@ -1,3 +1,5 @@
+let errorStyle = ReactDOMRe.Style.make(~color="#ff0000", ~fontWeight="bold", ());
+
 [@react.component]
 let make = (~dispatch, ~state: Types.state) => {
     React.useEffect0(() => {
@@ -22,7 +24,9 @@ let make = (~dispatch, ~state: Types.state) => {
 
         <ul>{tracks}</ul>
     })
-    ->Belt.Option.getWithDefault(React.null);
+    ->Belt.Option.getWithDefault(
+        <p style=(errorStyle)>{React.string("ERROR: no queue found!")}</p>
+    );
 
 
     <>
