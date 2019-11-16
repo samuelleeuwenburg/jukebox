@@ -1,7 +1,10 @@
 let baseUrl = "http://127.0.0.1:3000";
 
 type track = {
-    name: string
+    id: string,
+    name: string,
+    userId: string,
+    durationMs: int,
 };
 
 type queue = {
@@ -11,7 +14,10 @@ type queue = {
 module Decode = {
     let track = json =>
         Json.Decode.{
-            name: json |> field("name", string)
+            id: json |> field("track_id", string),
+            name: json |> field("track_name", string),
+            userId: json |> field("user_id", string),
+            durationMs: json |> field("duration_ms", int),
         };
 
     let queue = json =>
@@ -62,7 +68,7 @@ let addTrack = (user: Spotify.user, track: Spotify.track) => {
                 ()
             )
         )
-        |> then_(Fetch.Response.json)
+        |> then_(Fetch.Response.text)
     );
 };
 

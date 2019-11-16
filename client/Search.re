@@ -1,6 +1,6 @@
 module Track = {
     [@react.component]
-    let make = (~track: Spotify.track, ~token: string, ~user: Spotify.user) => {
+    let make = (~track: Spotify.track, ~token: string, ~user: Spotify.user, ~dispatch) => {
         let artist = List.hd(track.artists);
 
         let playTrack = React.useCallback0(() => {
@@ -8,7 +8,14 @@ module Track = {
         });
 
         let addTrack = React.useCallback0(() => {
-            Bragi.addTrack(user, track) |> ignore;
+            Bragi.addTrack(user, track)
+            |> Js.Promise.then_(_ => {
+                Bragi.getQueue();
+            })
+            |> Js.Promise.then_(queue => {
+                dispatch(Types.UpdateQueue(queue));
+                Js.Promise.resolve(queue);
+            }) |> ignore;
         });
 
         <li>
@@ -46,7 +53,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         open Spotify;
         let (results, user) = values;
         let tracks = results.items
-        |> List.map(track => <Track token=token track=track key=track.uri user=user />)
+        |> List.map(track => <Track dispatch=dispatch token=token track=track key=track.uri user=user />)
         |> Array.of_list
         |> React.array;
 

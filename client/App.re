@@ -3,6 +3,7 @@ let initialState: Types.state = {
     results: None,
     player: None,
     user: None,
+    queue: None,
 };
 
 let reducer = (state: Types.state, action: Types.action) => {
@@ -10,6 +11,7 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.UpdateQuery(query) => {...state, query: query}
     | Types.UpdatePlayer(player) => {...state, player: Some(player)}
     | Types.UpdateUser(user) => {...state, user: Some(user)}
+    | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
     | Types.Success(response) => {...state, results: Some(response)}
     | Types.ClearSearch => {...state, query: "", results: None}
     | Types.Error => state
@@ -46,5 +48,6 @@ let make = (~token: string) => {
         <p>{React.string("Token:" ++ token)}</p>
         <Info state=state />
         <Search dispatch=dispatch token=token state=state />
+        <Queue dispatch=dispatch state=state />
     </>
 };
