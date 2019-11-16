@@ -19,7 +19,9 @@ app.get('/queue', function (req, res) {
     const sql = "SELECT * FROM queue";
 
     db.all(sql, (err, rows) => {
-        res.send(rows)
+        res.send({ 
+            tracks: rows
+        })
     });
 });
 
