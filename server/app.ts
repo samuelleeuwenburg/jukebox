@@ -1,35 +1,38 @@
 import express = require('express');
-import sqlite3 = require('sqlite3');
 import bodyParser = require('body-parser');
 import cors = require('cors');
+import { getDb, getQueue, addTrackToQueue, Track } from './db';
 const app: express.Application = express();
 
-const db = new sqlite3.Database('./jukebox.db', err => {
-    err ? console.error(err.message)
-        : console.log('Connected to jukebox.db database');
-});
-
-db.run("CREATE TABLE IF NOT EXISTS queue (id INTEGER PRIMARY KEY, track_name TEXT, track_id TEXT, duration_ms INTEGER, user_id TEXT, last_updated DATETIME DEFAULT CURRENT_TIMESTAMP)");
-db.run("CREATE TABLE IF NOT EXISTS votes (id INTEGER PRIMARY KEY, user_id TEXT, track_id INTEGER)");
 
 app.use(cors());
 app.use(bodyParser.json());
 
 app.get('/api/queue', function (req, res) {
-    const sql = "SELECT * FROM queue";
-
-    db.all(sql, (err, rows) => {
-        res.send({ 
-            tracks: rows
-        })
+    const db = getDb();
+    getQueue(db, (err, tracks) => {
+        db.close();
+        res.send({ tracks })
     });
 });
 
 app.post('/api/queue', (req, res) => {
-    const body = req.body
-    db.run(`INSERT INTO queue (track_name, track_id, duration_ms, user_id) VALUES("${body.track_name}", "${body.track_id}", "${body.duration_ms}", "${body.user_id}")`)
+    const db = getDb();
+    const track: Track = req.body
 
-    res.send('item set')
+    addTrackToQueue(db, track, (err) => {
+        db.close();
+
+        if (err) {
+            console.log(`${new Date().toISOString()} - failed to add "${track.track_name}" to queue, `, err, '\n');
+
+            res.status(500);
+            res.send({ error: err })
+        }
+
+        console.log(`${new Date().toISOString()} - added "${track.track_name}" to queue \n`);
+        res.send({ status: 'ok' })
+    });
 });
 
 app.listen(3000, function () {
