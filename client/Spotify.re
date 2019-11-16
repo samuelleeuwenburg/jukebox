@@ -17,7 +17,8 @@ let authenticate = () => {
 };
 
 type user = {
-    id: string
+    id: string,
+    displayName: string,
 };
 
 type image = {
@@ -104,6 +105,7 @@ module Decode = {
     let user = json =>
         Json.Decode.{
             id: json |> field("id", string),
+            displayName: json |> field("display_name", string),
         };
 
     let player = json =>
@@ -129,11 +131,7 @@ let getTracks = (token: string, query: string) => {
             )
         )
         |> then_(Fetch.Response.json)
-        |> then_(json => json |> Decode.tracks |> (tracks => Some(tracks) |> resolve))
-        |> catch(err => {
-            Js.log(err);
-            resolve(None)
-        })
+        |> then_(json => json |> Decode.tracks |> resolve)
     );
 };
 
@@ -150,11 +148,7 @@ let getUser = (token: string) => {
             )
         )
         |> then_(Fetch.Response.json)
-        |> then_(json => json |> Decode.user |> (user => Some(user) |> resolve))
-        |> catch(err => {
-            Js.log(err);
-            resolve(None)
-        })
+        |> then_(json => json |> Decode.user |> resolve)
     );
 }
 
@@ -171,11 +165,7 @@ let getPlayer = (token: string) => {
             )
         )
         |> then_(Fetch.Response.json)
-        |> then_(json => json |> Decode.player |> (player => Some(player) |> resolve))
-        |> catch(err => {
-            Js.log(err);
-            resolve(None)
-        })
+        |> then_(json => json |> Decode.player |> resolve)
     );
 };
 
@@ -200,17 +190,12 @@ let playTrack = (token: string, songUri: string, positionMs: int) => {
                     "Authorization": "Bearer " ++ token,
                     "Content-Type": "application/json",
                     "Accept": "application/json"
-
                 }),
                 ()
             )
         )
         |> then_(Fetch.Response.json)
-        |> then_(json => json |> Decode.player |> (player => Some(player) |> resolve))
-        |> catch(err => {
-            Js.log(err);
-            resolve(None)
-        })
+        //@TODO: return something back to the application?
     );
 }
 

@@ -8,6 +8,8 @@ type state = {
 type action =
     | UpdateQuery(string)
     | Success(Spotify.response(Spotify.track))
+    | UpdatePlayer(Spotify.player)
+    | UpdateUser(Spotify.user)
     | ClearSearch
     | Error;
 

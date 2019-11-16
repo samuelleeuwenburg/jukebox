@@ -1,20 +1,22 @@
 module Track = {
     [@react.component]
-    let make = (~track: Spotify.track, ~token: string) => {
+    let make = (~track: Spotify.track, ~token: string, ~user: Spotify.user) => {
         let artist = List.hd(track.artists);
 
-        let playSong = React.useCallback0(() => {
-            Spotify.playTrack(token, track.uri, 0)
-            |> ignore;
+        let playTrack = React.useCallback0(() => {
+            Spotify.playTrack(token, track.uri, 0) |> ignore;
+        });
+
+        let addTrack = React.useCallback0(() => {
+            Bragi.addTrack(user, track) |> ignore;
         });
 
         <li>
             <strong>{React.string(artist.name)}</strong>
             {React.string(" - ")}
             {React.string(track.name)}
-            <button onClick={_ => playSong()}>
-                {React.string("playSong")}
-            </button>
+            <button onClick={_ => playTrack()}>{React.string("play")}</button>
+            <button onClick={_ => addTrack()}>{React.string("add")}</button>
         </li>
     };
 };
@@ -28,21 +30,25 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     let getTracks = React.useCallback1(() => {
         Js.Promise.(
             Spotify.getTracks(token, state.query)
-            |> then_(response => {
-                switch (response) {
-                | Some(t) => dispatch(Success(t))
-                | None => dispatch(Error)
-                };
-                resolve("")
+            |> then_(tracks => {
+                dispatch(Success(tracks));
+                resolve(tracks)
             })
         ) |> ignore;
     }, [|state.query|]);
 
     let results = state.results
-    ->Belt.Option.map(results => {
+    ->Belt.Option.flatMap(results => {
         open Spotify;
+        state.user->Belt.Option.map(user => {
+            (results, user)
+        });
+    })
+    ->Belt.Option.map(values => {
+        open Spotify;
+        let (results, user) = values;
         let tracks = results.items
-        |> List.map(track => <Track token=token track=track key=track.uri />)
+        |> List.map(track => <Track token=token track=track key=track.uri user=user />)
         |> Array.of_list
         |> React.array;
 
