@@ -13,10 +13,12 @@ export interface Track {
 
 export function getDb(): Database {
     const db = new Database('./jukebox.db', err => {
-        err ? console.error(err.message)
-            : console.log('Connected to jukebox.db database \n');
+        if (err) {
+            console.error(err.message);
+        }
     });
 
+    // Poor man's migrations
     db.run("CREATE TABLE IF NOT EXISTS queue (id INTEGER PRIMARY KEY, track_name TEXT, track_id TEXT, duration_ms INTEGER, user_id TEXT, last_updated DATETIME DEFAULT CURRENT_TIMESTAMP)");
     db.run("CREATE TABLE IF NOT EXISTS votes (id INTEGER PRIMARY KEY, user_id TEXT, track_id INTEGER)");
 

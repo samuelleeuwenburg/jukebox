@@ -10,9 +10,10 @@ app.use(bodyParser.json());
 
 app.get('/api/queue', function (req, res) {
     const db = getDb();
+
     getQueue(db, (err, tracks) => {
         db.close();
-        res.send({ tracks })
+        res.send({ tracks });
     });
 });
 
@@ -27,11 +28,11 @@ app.post('/api/queue', (req, res) => {
             console.log(`${new Date().toISOString()} - failed to add "${track.track_name}" to queue, `, err, '\n');
 
             res.status(500);
-            res.send({ error: err })
+            return res.send({ error: err });
         }
 
         console.log(`${new Date().toISOString()} - added "${track.track_name}" to queue \n`);
-        res.send({ status: 'ok' })
+        res.send({ status: 'ok' });
     });
 });
 
