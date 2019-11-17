@@ -4,6 +4,8 @@ type state = {
     player: option(Spotify.player),
     user: option(Spotify.user),
     queue: option(Bragi.queue),
+    currentTrack: option(Bragi.currentTrack),
+    socket: IO.socket,
 };
 
 type action =
@@ -12,6 +14,7 @@ type action =
     | UpdatePlayer(Spotify.player)
     | UpdateUser(Spotify.user)
     | UpdateQueue(Bragi.queue)
+    | UpdateCurrentTrack(Bragi.currentTrack)
     | ClearSearch
     | Error;
 

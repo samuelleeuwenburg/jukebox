@@ -4,6 +4,8 @@ let initialState: Types.state = {
     player: None,
     user: None,
     queue: None,
+    currentTrack: None,
+    socket: IO.getSocket(Bragi.baseUrl),
 };
 
 let reducer = (state: Types.state, action: Types.action) => {
@@ -13,6 +15,7 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.UpdateUser(user) => {...state, user: Some(user)}
     | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
     | Types.UpdateResults(response) => {...state, results: Some(response)}
+    | Types.UpdateCurrentTrack(currentTrack) => {...state, currentTrack: Some(currentTrack)}
     | Types.ClearSearch => {...state, query: "", results: None}
     | Types.Error => state
     };

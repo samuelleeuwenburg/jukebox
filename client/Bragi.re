@@ -1,4 +1,5 @@
-let baseUrl = "http://127.0.0.1:3000/api";
+let baseUrl = "http://127.0.0.1:3000";
+let baseApiUrl = baseUrl ++ "/api";
 
 type track = {
     id: int,
@@ -12,6 +13,11 @@ type track = {
 
 type queue = {
     tracks: list(track)
+};
+
+type currentTrack = {
+    cursor: int,
+    track: track
 };
 
 module Decode = {
@@ -30,10 +36,16 @@ module Decode = {
         Json.Decode.{
             tracks: json |> field("tracks", list(track))
         };
+
+    let currentTrack = json =>
+        Json.Decode.{
+            cursor: json |> field("cursor", int),
+            track: json |> field("track", track)
+        };
 };
 
 let getQueue = () => {
-    let url = baseUrl ++ "/queue";
+    let url = baseApiUrl ++ "/queue";
 
     Js.Promise.(
         Fetch.fetchWithInit(
@@ -52,10 +64,8 @@ let getQueue = () => {
     );
 };
 
-// let _getNow = () => {};
-
 let addTrack = (user: Spotify.user, track: Spotify.track) => {
-    let url = baseUrl ++ "/queue";
+    let url = baseApiUrl ++ "/queue";
     let payload = Js.Dict.empty();
 
     Js.Dict.set(payload, "track_name", Js.Json.string(track.name));
@@ -79,7 +89,7 @@ let addTrack = (user: Spotify.user, track: Spotify.track) => {
 };
 
 let vote = (user: Spotify.user, track: track) => {
-    let url = baseUrl ++ "/vote";
+    let url = baseApiUrl ++ "/vote";
     let payload = Js.Dict.empty();
 
     Js.Dict.set(payload, "track_name", Js.Json.string(track.name));

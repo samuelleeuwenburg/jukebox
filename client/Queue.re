@@ -4,14 +4,7 @@ module Track = {
     [@react.component]
     let make = (~dispatch, ~track: Bragi.track, ~user: Spotify.user) => {
         let voteTrack = React.useCallback0(() => {
-            Bragi.vote(user, track)
-            |> Js.Promise.then_(_ => {
-                Bragi.getQueue();
-            })
-            |> Js.Promise.then_(queue => {
-                dispatch(Types.UpdateQueue(queue));
-                Js.Promise.resolve(queue);
-            }) |> ignore;
+            Bragi.vote(user, track) |> ignore;
         });
         <li>
             <strong>{React.string("+" ++ string_of_int(track.upvotes) ++ " ")}</strong>
@@ -21,17 +14,40 @@ module Track = {
     }
 };
 
+module CurrentTrack = {
+    [@react.component]
+    let make = (~dispatch, ~state: Types.state) => {
+        React.useEffect0(() => {
+            IO.socketOn(state.socket, "trackProgressUpdate", (json) => {
+                let currentTrack = json |> Bragi.Decode.currentTrack;
+                dispatch(Types.UpdateCurrentTrack(currentTrack)) |> ignore;
+            });
+        });
+
+        state.currentTrack
+        ->Belt.Option.map(currentTrack => {
+            let fraction = float_of_int(currentTrack.cursor) /. float_of_int(currentTrack.track.durationMs);
+            let percentage = floor(fraction *. 100.0);
+            <>
+                <h2>{React.string("Now playing:")}</h2>
+                <p>
+                    {React.string(currentTrack.track.name)}
+                    {React.string(" - ")}
+                    {React.string(string_of_float(percentage) ++ "%")}
+                </p>
+            </>
+        })
+        ->Belt.Option.getWithDefault(React.null);
+    };
+};
+
 [@react.component]
 let make = (~dispatch, ~state: Types.state) => {
     React.useEffect0(() => {
-        Js.Promise.(
-            Bragi.getQueue()
-            |> then_(queue => {
-                dispatch(Types.UpdateQueue(queue))
-                resolve(queue)
-            })
-        ) |> ignore;
-        None;
+        IO.socketOn(state.socket, "queueUpdate", (json) => {
+            let queue = json |> Bragi.Decode.queue;
+            dispatch(Types.UpdateQueue(queue)) |> ignore;
+        });
     });
 
     let tracks = state.queue
@@ -58,6 +74,7 @@ let make = (~dispatch, ~state: Types.state) => {
 
 
     <div className="queue-container">
+        <CurrentTrack dispatch=dispatch state=state />
         <h2>{React.string("Queue:")}</h2>
         {tracks}
     </div>
