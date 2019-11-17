@@ -9,7 +9,7 @@ import {
     Track,
     voteOnTrack,
     removeTrack,
-    getAllVotes,
+    getAllUserVotes,
     emitQueueUpdate
 } from './db';
 const app = express();
@@ -72,11 +72,13 @@ app.post('/api/vote', async (req, res) => {
     }
 });
 
-app.get('/api/votes', async (req, res) => {
+app.get('/api/votes/:userId', async (req, res) => {
     const db = getDb();
 
     try {
-        const votes = await getAllVotes(db);
+        const userId = req.params.userId;
+
+        const votes = await getAllUserVotes(db, userId);
         res.send({ votes });
 
     } catch (err) {

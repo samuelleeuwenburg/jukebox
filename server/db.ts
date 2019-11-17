@@ -111,6 +111,6 @@ export async function removeTrack(db: Database, trackId: number) {
     await run(db, `DELETE FROM votes WHERE track_id='${trackId}'`);
 }
 
-export async function getAllVotes(db: Database) {
-    return all<Vote>(db, `SELECT * FROM votes ORDER BY track_id`);
+export async function getAllUserVotes(db: Database, userId: string) {
+    return all<Vote>(db, `SELECT * FROM votes WHERE user_id='${userId}' ORDER BY track_id`);
 }
