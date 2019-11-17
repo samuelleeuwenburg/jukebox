@@ -1,4 +1,5 @@
 import { Database } from 'sqlite3';
+import { io } from './app';
 
 function run(db: Database, sql: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -80,10 +81,18 @@ export async function getQueue(db: Database) {
     return all<Track[]>(db, sql);
 }
 
+export async function emitQueueUpdate(db: Database) {
+    const tracks = await getQueue(db);
+
+    return io.emit("queueUpdate", { tracks })
+}
+
 // @TODO: protect against sql injections 
 export async function addTrackToQueue(db: Database, track: Track) {
+    
     await run(db, `INSERT INTO queue (track_name, spotify_track_id, track_uri, duration_ms, user_id)
             VALUES("${track.track_name}", "${track.spotify_track_id}", "${track.track_uri}", "${track.duration_ms}", "${track.user_id}")`);
+
     return voteOnTrack(db, track);
 }
 
@@ -97,6 +106,7 @@ export async function voteOnTrack(db: Database, track: Track) {
 }
 
 export async function removeTrack(db: Database, trackId: number) {
+    
     await run(db, `DELETE FROM queue WHERE id='${trackId}'`);
     await run(db, `DELETE FROM votes WHERE track_id='${trackId}'`);
 }

@@ -10,8 +10,11 @@ import {
     voteOnTrack,
     removeTrack,
     getAllVotes,
+    emitQueueUpdate
 } from './db';
-const app: express.Application = express();
+const app = express();
+const server = require('http').createServer(app);
+export const io = require('socket.io')(server);
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -35,8 +38,13 @@ app.post('/api/queue', async (req, res) => {
     try {
         const db = getDb();
         await addTrackToQueue(db, track);
+
+        await emitQueueUpdate(db);
+
         db.close();
         console.log(`${new Date().toISOString()} - added "${track.track_name}" to queue \n`);
+
+
         res.send({ status: 'ok' });
 
     } catch(err) {
@@ -96,6 +104,7 @@ async function play() {
 
     now.track = tracks[0];
     await removeTrack(db, now.track.id);
+    await emitQueueUpdate(db);
 
     console.log(`${new Date().toISOString()} - NOW PLAYING -> ${now.track.track_name}`);
     db.close();
@@ -122,8 +131,7 @@ app.get('/api/now', (req, res) => {
     res.send(now);
 });
 
-
-app.listen(3000, () => {
+server.listen(3000, () => {
     const db = getDb();
     createDb(db);
     db.close();
