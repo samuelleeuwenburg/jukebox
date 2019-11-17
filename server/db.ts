@@ -114,4 +114,3 @@ export async function removeTrack(db: Database, trackId: number) {
 export async function getAllVotes(db: Database) {
     return all<Vote>(db, `SELECT * FROM votes ORDER BY track_id`);
 }
-

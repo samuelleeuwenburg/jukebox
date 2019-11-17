@@ -60,6 +60,8 @@ app.post('/api/vote', async (req, res) => {
     try {
         const db = getDb();
         await voteOnTrack(db, track);
+        await emitQueueUpdate(db);
+        
         db.close();
         console.log(`${new Date().toISOString()} - voted for "${track.track_name}" \n`);
         res.send({ status: 'ok' });
