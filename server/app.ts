@@ -118,6 +118,7 @@ async function play() {
         if (!now.track) { return }
         if (now.cursor < now.track.duration_ms) {
             now.cursor += 100;
+            io.emit('trackProgressUpdate', now)
             return;
         }
 
