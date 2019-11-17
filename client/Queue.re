@@ -42,7 +42,11 @@ let make = (~dispatch, ~state: Types.state) => {
         open Bragi;
         let (queue, user) = values;
         let tracks = queue.tracks
-        |> List.map(track => <Track key=track.spotifyTrackId dispatch=dispatch track=track user=user />)
+        |> List.map(track => {
+            <div className="queue-track-container">
+                <Track key=track.spotifyTrackId dispatch=dispatch track=track user=user />
+            </div>
+        })
         |> Array.of_list
         |> React.array;
 
@@ -53,8 +57,8 @@ let make = (~dispatch, ~state: Types.state) => {
     );
 
 
-    <>
+    <div className="queue-container">
         <h2>{React.string("Queue:")}</h2>
         {tracks}
-    </>
+    </div>
 };

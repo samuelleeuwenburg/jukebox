@@ -19,9 +19,8 @@ module Track = {
             }) |> ignore;
         });
 
-        <li>
+        <li onClick={_ => addTrack()}>{React.string("add")}
             <button onClick={_ => playTrack()}>{React.string("play")}</button>
-            <button onClick={_ => addTrack()}>{React.string("add")}</button>
             {React.string(" | ")}
             <strong>{React.string(artist.name)}</strong>
             {React.string(" - ")}
@@ -54,7 +53,12 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         open Spotify;
         let (results, user) = values;
         let tracks = results.items
-        |> List.map(track => <Track dispatch=dispatch token=token track=track key=track.uri user=user />)
+        |> List.map(track => {
+
+            <div className="search-result-container">
+                <Track dispatch=dispatch token=token track=track key=track.uri user=user />
+            </div>
+        })
         |> Array.of_list
         |> React.array;
 
@@ -62,13 +66,17 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     })
     ->Belt.Option.getWithDefault(React.null);
 
-    <>
-        <input
-            value={state.query} 
-            onChange={event => dispatch(Types.UpdateQuery(ReactEvent.Form.target(event)##value))}
-        />
-        <button onClick={_ => clearSearch()}>{React.string("clear")}</button>
-        <button onClick={_ => getTracks()}>{React.string("search")}</button>
-        {results}
-    </>
+    <div className="search-container">
+        <div className="search-input-container">
+            <input
+                value={state.query} 
+                onChange={event => dispatch(Types.UpdateQuery(ReactEvent.Form.target(event)##value))}
+            />
+            <button onClick={_ => clearSearch()}>{React.string("clear")}</button>
+            <button onClick={_ => getTracks()}>{React.string("search")}</button>
+        </div>
+        <div className="search-results-container">
+            {results}
+        </div>
+    </div>
 };

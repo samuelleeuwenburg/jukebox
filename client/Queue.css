@@ -1,0 +1,15 @@
+.queue-container {
+    background-color: var(--light-gray);
+    height: calc(100vh - 136px);
+    border-left: 1px solid var(--lightest-gray);
+    color: #fff;
+    overflow: auto;
+}
+
+.queue-track-container {
+    padding: 20px;
+    border-bottom: 1px solid var(--lightest-gray);
+}
+.queue-track-container:hover {
+    background-color: var(--lightest-gray);
+}

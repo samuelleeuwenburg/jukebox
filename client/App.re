@@ -44,10 +44,15 @@ let make = (~token: string) => {
         None;
     });
 
-    <>
-        <p>{React.string("Token:" ++ token)}</p>
-        <Info state=state />
-        <Search dispatch=dispatch token=token state=state />
-        <Queue dispatch=dispatch state=state />
-    </>
+    <div className="row">
+        <div className="col-left">
+            <Info state=state />
+        </div>
+        <div className="col-right">
+            <div className="sidebar-header">
+                <Search dispatch=dispatch token=token state=state />
+            </div>
+            <Queue dispatch=dispatch state=state />
+        </div>
+    </div>
 };

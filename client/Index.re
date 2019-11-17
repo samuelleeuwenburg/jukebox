@@ -3,13 +3,17 @@ module Index = {
     let make = () => {
         switch (Utils.getToken()) {
         | Some(token) => {
-                <>
+            <>
+                <div className="header">
                     <Logout />
-                    <App token=token />
-                </>
-            }
+                </div>
+                <App token=token />
+            </>
+        }
         | None => {
+            <div className="header">
                 <Login />
+            </div>
             }
         };
     };
