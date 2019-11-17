@@ -109,6 +109,7 @@ async function play() {
     now.track = tracks[0];
     await removeTrack(db, now.track.id);
     await emitQueueUpdate(db);
+    io.emit('currentTrackUpdate', now.track)
 
     console.log(`${new Date().toISOString()} - NOW PLAYING -> ${now.track.track_name}`);
     db.close();
@@ -118,7 +119,7 @@ async function play() {
         if (!now.track) { return }
         if (now.cursor < now.track.duration_ms) {
             now.cursor += 100;
-            io.emit('trackProgressUpdate', now)
+            io.emit('trackProgressUpdate', { cursor: now.cursor })
             return;
         }
 
@@ -133,7 +134,7 @@ app.get('/api/now', (req, res) => {
         return res.send({ status: 'no track is playing' });
     }
 
-    res.send(now);
+    res.send(now.track);
 });
 
 server.listen(3000, () => {
