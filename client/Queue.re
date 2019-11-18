@@ -16,11 +16,17 @@ module Track = {
 
 module CurrentTrack = {
     [@react.component]
-    let make = (~dispatch, ~state: Types.state) => {
+    let make = (~dispatch, ~state: Types.state, ~token: string) => {
         React.useEffect0(() => {
             IO.socketOn(state.socket, "trackProgressUpdate", (json) => {
-                let currentTrack = json |> Bragi.Decode.currentTrack;
-                dispatch(Types.UpdateCurrentTrack(currentTrack)) |> ignore;
+                let now = json |> Bragi.Decode.now;
+                dispatch(Types.UpdateCursor(now.cursor)) |> ignore;
+            });
+
+            IO.socketOn(state.socket, "currentTrackUpdate", (json) => {
+                let track = json |> Bragi.Decode.track;
+                Spotify.playTrack(token, track.uri, 0);
+                dispatch(Types.UpdateCurrentTrack(track)) |> ignore;
             });
         });
 
@@ -42,7 +48,7 @@ module CurrentTrack = {
 };
 
 [@react.component]
-let make = (~dispatch, ~state: Types.state) => {
+let make = (~dispatch, ~state: Types.state, ~token: string) => {
     React.useEffect0(() => {
         IO.socketOn(state.socket, "queueUpdate", (json) => {
             let queue = json |> Bragi.Decode.queue;
@@ -74,7 +80,7 @@ let make = (~dispatch, ~state: Types.state) => {
 
 
     <div className="queue-container">
-        <CurrentTrack dispatch=dispatch state=state />
+        <CurrentTrack dispatch=dispatch state=state token=token />
         <h2>{React.string("Queue:")}</h2>
         {tracks}
     </div>

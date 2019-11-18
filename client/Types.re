@@ -14,7 +14,8 @@ type action =
     | UpdatePlayer(Spotify.player)
     | UpdateUser(Spotify.user)
     | UpdateQueue(Bragi.queue)
-    | UpdateCurrentTrack(Bragi.currentTrack)
+    | UpdateCurrentTrack(Bragi.track)
+    | UpdateCursor(int)
     | ClearSearch
     | Error;
 

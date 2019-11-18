@@ -15,7 +15,28 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.UpdateUser(user) => {...state, user: Some(user)}
     | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
     | Types.UpdateResults(response) => {...state, results: Some(response)}
-    | Types.UpdateCurrentTrack(currentTrack) => {...state, currentTrack: Some(currentTrack)}
+    | Types.UpdateCurrentTrack(track) => {
+        {
+            ...state,
+            currentTrack: Some({
+                cursor: 0,
+                track: track
+            })
+        }
+    }
+    | Types.UpdateCursor(cursor) => {
+        state.currentTrack
+        ->Belt.Option.map(currentTrack => {
+            {
+                ...state,
+                currentTrack: Some({
+                    ...currentTrack,
+                    cursor: cursor
+                })
+            }
+        })
+        ->Belt.Option.getWithDefault(state);
+    }
     | Types.ClearSearch => {...state, query: "", results: None}
     | Types.Error => state
     };
@@ -55,7 +76,7 @@ let make = (~token: string) => {
             <div className="sidebar-header">
                 <Search dispatch=dispatch token=token state=state />
             </div>
-            <Queue dispatch=dispatch state=state />
+            <Queue dispatch=dispatch state=state token=token />
         </div>
     </div>
 };

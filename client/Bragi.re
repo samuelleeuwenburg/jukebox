@@ -20,6 +20,10 @@ type currentTrack = {
     track: track
 };
 
+type now = {
+    cursor: int
+};
+
 module Decode = {
     let track = json =>
         Json.Decode.{
@@ -35,6 +39,11 @@ module Decode = {
     let queue = json =>
         Json.Decode.{
             tracks: json |> field("tracks", list(track))
+        };
+
+    let now = json =>
+        Json.Decode.{
+            cursor: json |> field("cursor", int),
         };
 
     let currentTrack = json =>
