@@ -18,16 +18,24 @@ module CurrentTrack = {
     [@react.component]
     let make = (~dispatch, ~state: Types.state, ~token: string) => {
         React.useEffect0(() => {
-            IO.socketOn(state.socket, "trackProgressUpdate", (json) => {
-                let now = json |> Bragi.Decode.now;
-                dispatch(Types.UpdateCursor(now.cursor)) |> ignore;
-            });
-
             IO.socketOn(state.socket, "currentTrackUpdate", (json) => {
                 let track = json |> Bragi.Decode.track;
                 Spotify.playTrack(token, track.uri, 0);
                 dispatch(Types.UpdateCurrentTrack(track)) |> ignore;
             });
+
+            //@TODO use date to accurately measure time
+            Js.Global.setInterval(() => dispatch(Types.Tick), 100);
+
+            Js.Promise.(
+                Bragi.getCurrentTrack()
+                |> then_(currentTrack => {
+                    dispatch(Types.UpdateCurrentTrackAndCursor(currentTrack));
+                    Spotify.playTrack(token, currentTrack.track.uri, currentTrack.cursor);
+                    resolve(currentTrack)
+                })
+            ) |> ignore;
+            None;
         });
 
         state.currentTrack
@@ -50,6 +58,14 @@ module CurrentTrack = {
 [@react.component]
 let make = (~dispatch, ~state: Types.state, ~token: string) => {
     React.useEffect0(() => {
+        Js.Promise.(
+            Bragi.getQueue()
+            |> then_(queue => {
+                dispatch(Types.UpdateQueue(queue));
+                resolve(queue)
+            })
+        ) |> ignore;
+
         IO.socketOn(state.socket, "queueUpdate", (json) => {
             let queue = json |> Bragi.Decode.queue;
             dispatch(Types.UpdateQueue(queue)) |> ignore;

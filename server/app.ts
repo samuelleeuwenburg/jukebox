@@ -14,7 +14,7 @@ import {
 } from './db';
 const app = express();
 const server = require('http').createServer(app);
-export const io = require('socket.io')(server);
+export const io = require('socket.io')(server, { path: '/socket.io' });
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -109,7 +109,7 @@ async function play() {
     now.track = tracks[0];
     await removeTrack(db, now.track.id);
     await emitQueueUpdate(db);
-    io.emit('currentTrackUpdate', now.track)
+    io.emit('currentTrackUpdate', now.track);
 
     console.log(`${new Date().toISOString()} - NOW PLAYING -> ${now.track.track_name}`);
     db.close();
@@ -118,8 +118,8 @@ async function play() {
     const intervalId = setInterval(() => {
         if (!now.track) { return }
         if (now.cursor < now.track.duration_ms) {
+            //@TODO use date to accurately measure time
             now.cursor += 100;
-            io.emit('trackProgressUpdate', { cursor: now.cursor })
             return;
         }
 
@@ -134,7 +134,7 @@ app.get('/api/now', (req, res) => {
         return res.send({ status: 'no track is playing' });
     }
 
-    res.send(now.track);
+    res.send(now);
 });
 
 server.listen(3000, () => {

@@ -1,8 +1,8 @@
 type socket;
 
-let getSocket: string => socket = [%bs.raw
-    {| function (url) {
-        return io(url);
+let getSocket: string => string => socket = [%bs.raw
+    {| function (url, path) {
+        return io(url, { path: path });
     } |}
 ];
 

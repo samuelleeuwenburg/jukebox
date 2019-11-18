@@ -53,6 +53,26 @@ module Decode = {
         };
 };
 
+let getCurrentTrack = () => {
+    let url = baseApiUrl ++ "/now";
+
+    Js.Promise.(
+        Fetch.fetchWithInit(
+            url,
+            Fetch.RequestInit.make(
+                ~method_=Get,
+                ~headers=Fetch.HeadersInit.make({
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }),
+                ()
+            )
+        )
+        |> then_(Fetch.Response.json)
+        |> then_(json => json |> Decode.currentTrack |> resolve)
+    );
+}
+
 let getQueue = () => {
     let url = baseApiUrl ++ "/queue";
 

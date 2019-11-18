@@ -10,12 +10,7 @@ module Track = {
         let addTrack = React.useCallback0(() => {
             Bragi.addTrack(user, track)
             |> Js.Promise.then_(_ => {
-                dispatch(Types.ClearSearch);
-                Bragi.getQueue();
-            })
-            |> Js.Promise.then_(queue => {
-                dispatch(Types.UpdateQueue(queue));
-                Js.Promise.resolve(queue);
+                dispatch(Types.ClearSearch) |> Js.Promise.resolve;
             }) |> ignore;
         });
 

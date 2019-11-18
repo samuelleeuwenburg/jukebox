@@ -5,7 +5,7 @@ let initialState: Types.state = {
     user: None,
     queue: None,
     currentTrack: None,
-    socket: IO.getSocket(Bragi.baseUrl),
+    socket: IO.getSocket(Bragi.baseUrl, "/socket.io"),
 };
 
 let reducer = (state: Types.state, action: Types.action) => {
@@ -15,6 +15,7 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.UpdateUser(user) => {...state, user: Some(user)}
     | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
     | Types.UpdateResults(response) => {...state, results: Some(response)}
+    | Types.UpdateCurrentTrackAndCursor(currentTrack) => {...state, currentTrack: Some(currentTrack)}
     | Types.UpdateCurrentTrack(track) => {
         {
             ...state,
@@ -24,14 +25,14 @@ let reducer = (state: Types.state, action: Types.action) => {
             })
         }
     }
-    | Types.UpdateCursor(cursor) => {
+    | Types.Tick => {
         state.currentTrack
         ->Belt.Option.map(currentTrack => {
             {
                 ...state,
                 currentTrack: Some({
                     ...currentTrack,
-                    cursor: cursor
+                    cursor: currentTrack.cursor + 100
                 })
             }
         })
