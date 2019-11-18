@@ -3,10 +3,6 @@ module Track = {
     let make = (~track: Spotify.track, ~token: string, ~user: Spotify.user, ~dispatch) => {
         let artist = List.hd(track.artists);
 
-        let playTrack = React.useCallback0(() => {
-            Spotify.playTrack(token, track.uri, 0) |> ignore;
-        });
-
         let addTrack = React.useCallback0(() => {
             Bragi.addTrack(user, track)
             |> Js.Promise.then_(_ => {
@@ -15,7 +11,6 @@ module Track = {
         });
 
         <li onClick={_ => addTrack()}>{React.string("add")}
-            <button onClick={_ => playTrack()}>{React.string("play")}</button>
             {React.string(" | ")}
             <strong>{React.string(artist.name)}</strong>
             {React.string(" - ")}
@@ -49,10 +44,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         let (results, user) = values;
         let tracks = results.items
         |> List.map(track => {
-
-            <div className="search-result-container">
-                <Track dispatch=dispatch token=token track=track key=track.uri user=user />
-            </div>
+            <Track dispatch=dispatch token=token track=track key=track.uri user=user />
         })
         |> Array.of_list
         |> React.array;

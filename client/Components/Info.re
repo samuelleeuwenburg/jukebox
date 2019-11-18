@@ -1,4 +1,11 @@
-let errorStyle = ReactDOMRe.Style.make(~color="#ff0000", ~fontWeight="bold", ());
+module Styles = {
+    open Css;
+
+    let error = style([
+        color(hex("ff0000")),
+        fontWeight(bold),
+    ]);
+};
 
 [@react.component]
 let make = (~state: Types.state) => {
@@ -10,7 +17,7 @@ let make = (~state: Types.state) => {
             </p>
         })
         ->Belt.Option.getWithDefault(
-            <p style=(errorStyle)>{React.string("ERROR: no user found!")}</p>
+            <p className=Styles.error>{React.string("ERROR: no user found!")}</p>
         );
 
     let player = state.player
@@ -21,7 +28,7 @@ let make = (~state: Types.state) => {
             </p>
         })
         ->Belt.Option.getWithDefault(
-            <p style=(errorStyle)>{React.string("WARNING: no device found!")}</p>
+            <p className=Styles.error>{React.string("WARNING: no device found!")}</p>
         );
 
     <>
