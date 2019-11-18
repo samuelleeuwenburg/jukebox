@@ -29,12 +29,11 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.Tick => {
         state.currentTrack
         ->Belt.Option.map(currentTrack => {
-            {
-                ...state,
-                currentTrack: Some({
-                    ...currentTrack,
-                    cursor: int_of_float(Js.Date.now()) - currentTrack.timestamp,
-                })
+            let cursor = int_of_float(Js.Date.now()) - currentTrack.timestamp;
+            if (cursor > currentTrack.track.durationMs) {
+                {...state, currentTrack: None }
+            } else {
+                {...state, currentTrack: Some({ ...currentTrack, cursor })}
             }
         })
         ->Belt.Option.getWithDefault(state);
