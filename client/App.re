@@ -1,3 +1,12 @@
+module Styles = {
+    open Css;
+
+    let appContainer = style([
+        maxWidth(px(1024)),
+        margin2(zero, auto)
+    ]);
+
+}
 [@react.component]
 let make = (~token: string) => {
     let (state, dispatch) = React.useReducer(State.reducer, State.initialState);
@@ -24,10 +33,10 @@ let make = (~token: string) => {
         None;
     });
 
-    <>
+    <div className=Styles.appContainer>
         <Info state=state />
         <Search dispatch=dispatch token=token state=state />
         <Now dispatch=dispatch state=state token=token />
         <Queue dispatch=dispatch state=state token=token />
-    </>
+    </div>
 };
