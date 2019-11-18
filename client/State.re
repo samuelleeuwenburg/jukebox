@@ -16,11 +16,12 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
     | Types.UpdateResults(response) => {...state, results: Some(response)}
     | Types.UpdateCurrentTrackAndCursor(currentTrack) => {...state, currentTrack: Some(currentTrack)}
-    | Types.UpdateCurrentTrack(track) => {
+    | Types.UpdateCurrentTrack(track, timestamp) => {
         {
             ...state,
             currentTrack: Some({
                 cursor: 0,
+                timestamp: timestamp,
                 track: track
             })
         }
@@ -32,7 +33,7 @@ let reducer = (state: Types.state, action: Types.action) => {
                 ...state,
                 currentTrack: Some({
                     ...currentTrack,
-                    cursor: currentTrack.cursor + 100
+                    cursor: int_of_float(Js.Date.now()) - currentTrack.timestamp,
                 })
             }
         })

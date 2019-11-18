@@ -32,6 +32,7 @@ export interface Track {
     track_uri: string;
     duration_ms: number;
     user_id: string;
+    image_url: string;
 }
 
 export interface Vote {
@@ -40,7 +41,8 @@ export interface Vote {
     track_id: number;
 }
 
-export function createDb(db: Database) {
+export function createDb() {
+    const db = getDb();
     // Poor man's migrations
     db.run(`CREATE TABLE IF NOT EXISTS queue (
         id INTEGER PRIMARY KEY,
@@ -49,6 +51,7 @@ export function createDb(db: Database) {
         track_uri TEXT,
         duration_ms INTEGER,
         user_id TEXT,
+        image_url TEXT,
         last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
         unique (spotify_track_id)
     )`, err => err ? console.log('failed to create "queue" table', err) : null);
@@ -59,6 +62,7 @@ export function createDb(db: Database) {
         track_id INTEGER,
         unique (track_id, user_id)
     )`, err => err ? console.log('failed to create "votes" table', err) : null);
+    db.close();
 }
 
 export function getDb(): Database {
@@ -89,9 +93,24 @@ export async function emitQueueUpdate(db: Database) {
 
 // @TODO: protect against sql injections 
 export async function addTrackToQueue(db: Database, track: Track) {
-    
-    await run(db, `INSERT INTO queue (track_name, spotify_track_id, track_uri, duration_ms, user_id)
-            VALUES("${track.track_name}", "${track.spotify_track_id}", "${track.track_uri}", "${track.duration_ms}", "${track.user_id}")`);
+    const sql = `
+        INSERT INTO queue (
+            track_name,
+            spotify_track_id,
+            track_uri,
+            duration_ms,
+            user_id,
+            image_url
+        ) VALUES(
+            "${track.track_name}",
+            "${track.spotify_track_id}",
+            "${track.track_uri}",
+            "${track.duration_ms}",
+            "${track.user_id}",
+            "${track.image_url}"
+        )
+    `;
+    await run(db, sql);
 
     return voteOnTrack(db, track);
 }
@@ -102,11 +121,10 @@ export async function getTrackBySpotifyId(db: Database, spotifyTrackId: string) 
 
 export async function voteOnTrack(db: Database, track: Track) {
     const trackFromDb = await getTrackBySpotifyId(db, track.spotify_track_id);
-    return run(db, `INSERT INTO votes (user_id, track_id) VALUES("${trackFromDb.user_id}", "${trackFromDb.id}")`);
+    return run(db, `INSERT INTO votes (user_id, track_id) VALUES("${track.user_id}", "${trackFromDb.id}")`);
 }
 
 export async function removeTrack(db: Database, trackId: number) {
-    
     await run(db, `DELETE FROM queue WHERE id='${trackId}'`);
     await run(db, `DELETE FROM votes WHERE track_id='${trackId}'`);
 }

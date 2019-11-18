@@ -7,6 +7,7 @@ type track = {
     name: string,
     uri: string,
     userId: string,
+    imageUrl: string,
     durationMs: int,
     upvotes: int
 };
@@ -17,11 +18,8 @@ type queue = {
 
 type currentTrack = {
     cursor: int,
-    track: track
-};
-
-type now = {
-    cursor: int
+    timestamp: int,
+    track: track,
 };
 
 module Decode = {
@@ -34,6 +32,7 @@ module Decode = {
             userId: json |> field("user_id", string),
             durationMs: json |> field("duration_ms", int),
             upvotes: json |> field("upvotes", int),
+            imageUrl: json |> field("image_url", string),
         };
 
     let queue = json =>
@@ -41,14 +40,10 @@ module Decode = {
             tracks: json |> field("tracks", list(track))
         };
 
-    let now = json =>
-        Json.Decode.{
-            cursor: json |> field("cursor", int),
-        };
-
     let currentTrack = json =>
         Json.Decode.{
             cursor: json |> field("cursor", int),
+            timestamp: json |> field("timestamp", int),
             track: json |> field("track", track)
         };
 };
@@ -96,11 +91,14 @@ let getQueue = () => {
 let addTrack = (user: Spotify.user, track: Spotify.track) => {
     let url = baseApiUrl ++ "/queue";
     let payload = Js.Dict.empty();
+    let image = track.album.images
+    |> List.find((image: Spotify.image) => image.width == 640);
 
     Js.Dict.set(payload, "track_name", Js.Json.string(track.name));
     Js.Dict.set(payload, "track_uri", Js.Json.string(track.uri));
     Js.Dict.set(payload, "spotify_track_id", Js.Json.string(track.id));
     Js.Dict.set(payload, "duration_ms", Js.Json.number(track.durationMs |> float_of_int));
+    Js.Dict.set(payload, "image_url", Js.Json.string(image.url));
     Js.Dict.set(payload, "user_id", Js.Json.string(user.id));
 
     Js.Promise.(

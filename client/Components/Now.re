@@ -2,13 +2,12 @@
 let make = (~dispatch, ~state: Types.state, ~token: string) => {
     React.useEffect0(() => {
         IO.socketOn(state.socket, "currentTrackUpdate", (json) => {
-            let track = json |> Bragi.Decode.track;
-            Spotify.playTrack(token, track.uri, 0);
-            dispatch(Types.UpdateCurrentTrack(track)) |> ignore;
+            let now = json |> Bragi.Decode.currentTrack;
+            Spotify.playTrack(token, now.track.uri, 0);
+            dispatch(Types.UpdateCurrentTrack(now.track, now.timestamp)) |> ignore;
         });
 
-        //@TODO use date to accurately measure time
-        Js.Global.setInterval(() => dispatch(Types.Tick), 100);
+        Js.Global.setInterval(() => dispatch(Types.Tick), 160);
 
         Js.Promise.(
             Bragi.getCurrentTrack()
