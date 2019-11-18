@@ -2,7 +2,7 @@ module Styles = {
     open Css;
 
     let error = style([
-        color(hex("ff0000")),
+        color(Style.Colors.error),
         fontWeight(bold),
     ]);
 };
