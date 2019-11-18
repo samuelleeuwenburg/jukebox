@@ -26,6 +26,8 @@ export const now: Now = {
 export async function play() {
     const db = getDb();
     const tracks = await getQueue(db);
+    now.track = null;
+    now.cursor = 0;
 
     if (!tracks || !tracks.length) {
         setTimeout(play, 5000);
@@ -35,13 +37,11 @@ export async function play() {
     }
 
     now.track = tracks[0];
-    now.cursor = 0;
-    now.timestamp = Date.now();
-
     await removeTrack(db, now.track.id);
     await emitQueueUpdate(db);
     db.close();
 
+    now.timestamp = Date.now();
     io.emit('currentTrackUpdate', now);
     console.log(`${new Date().toISOString()} - NOW PLAYING -> ${now.track.track_name}`);
 
