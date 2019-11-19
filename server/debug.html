@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jukebox Debug</title>
+</head>
+<body>
+  <main id="app"></main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+  <script>
+    const socket = io('/', { path: '/socket.io' });
+
+    socket.on('newQueue', r => {
+        console.log('newQueue', r)
+    })
+
+    let trackId = 0;
+    let randomUser = 1000;
+    
+    function vote() {
+        randomUser++
+        socket.emit('vote', {
+            trackId: trackId.toString(),
+            userId: randomUser.toString()
+        })
+        console.log('vote', {
+            trackId: trackId.toString(),
+            userId: randomUser.toString()
+        })
+    }
+
+    function addTrack() {
+        trackId++;
+        const track = {
+            id: trackId.toString(),
+            name: 'track name',
+            uri: 'spotify:track:abcdefg',
+            userId: 'someUser',
+            imageUrl: 'http://bragi.samsam.dev',
+            durationMs: 60000,
+        }
+
+        socket.emit('addTrack', track)
+    }
+
+    function getQueue() {
+        socket.emit('getQueue')
+    }
+  </script>
+
+  <button onClick="vote()">vote</button>
+  <button onClick="addTrack()">add track</button>
+  <button onClick="getQueue()">get Queue</button>
+</body>
+</html>
