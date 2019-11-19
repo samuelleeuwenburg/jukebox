@@ -5,6 +5,39 @@ module Styles = {
         color(Style.Colors.error),
         fontWeight(bold),
     ]);
+
+    let trackContainer = style([
+        display(`flex),
+        flexWrap(wrap),
+        flexDirection(row),
+        width(pct(100.0)),
+        padding2(px(10), px(0)),
+        alignItems(center),
+        borderBottom(px(1), `solid, Style.Colors.gray),
+        selector("&:first-child", [
+            borderTop(px(1), `solid, Style.Colors.gray)
+        ])
+    ]);
+
+    let column = style([
+        width(`calc(`sub, pct(25.0), px(35))),
+        marginRight(px(20)),
+        textOverflow(ellipsis),
+        overflow(hidden),
+        whiteSpace(nowrap),
+        selector("&:last-child", [
+            marginRight(zero)
+        ])
+    ]);
+
+    let albumCover = style([
+        width(px(40)),
+        height(px(40)),
+        backgroundColor(red),
+        backgroundPosition(center),
+        backgroundSize(cover),
+        marginRight(px(40))
+    ]);
 };
 
 module Track = {
@@ -13,10 +46,26 @@ module Track = {
         let voteTrack = React.useCallback0(() => {
             Bragi.vote(user, track) |> ignore;
         });
-        <li>
-            <strong>{React.string("+" ++ string_of_int(track.upvotes) ++ " ")}</strong>
-            <button onClick={_ => voteTrack()}>{React.string("vote")}</button>
-            {React.string(" - " ++ track.name)}
+
+        <li className=Styles.trackContainer>
+            <div 
+                className=Styles.albumCover
+                style=(ReactDOMRe.Style.make(~backgroundImage="url('"++track.imageUrl++"')", ()))
+            >
+            </div>
+            <div className=Styles.column>
+                {React.string(track.name)}
+            </div>
+            <div className=Styles.column>
+                {React.string(track.name)}
+            </div>
+            <div className=Styles.column>
+                {React.string(user.displayName)}
+            </div>
+            <div className=Styles.column>
+                <button onClick={_ => voteTrack()}>{React.string("vote")}</button>
+                <strong>{React.string("+" ++ string_of_int(track.upvotes) ++ " ")}</strong>
+            </div>
         </li>
     }
 };
@@ -51,7 +100,6 @@ let make = (~dispatch, ~state: Types.state, ~token: string) => {
         })
         |> Array.of_list
         |> React.array;
-
         <ul>{tracks}</ul>
     })
     ->Belt.Option.getWithDefault(
@@ -60,7 +108,7 @@ let make = (~dispatch, ~state: Types.state, ~token: string) => {
 
 
     <>
-        <h2>{React.string("Queue:")}</h2>
+        <h2>{React.string("Next in queue")}</h2>
         {tracks}
     </>
 };
