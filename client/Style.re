@@ -10,6 +10,7 @@ module Colors = {
        margin(zero),
        color(hex("dbdbdb")),
        fontFamily("sans-serif"),
+       margin2(zero, px(40))
     ]);
 
     global("ul, ol", [
