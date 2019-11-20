@@ -6,7 +6,8 @@ module Colors = {
     let lightestGray = hex("B3B3B3");
     let lightGray = hex("858585")
     let gray = hex("565656");
-    let darkGray = hex("252526");
+    let darkGray = hex("505050")
+    let darkerGray = hex("252526");
     let darkestGray = hex("141518");
 
     global("body", [
@@ -17,12 +18,16 @@ module Colors = {
     ]);
 
     global("ul, ol", [
-       margin(zero),
-       padding(zero)
+      margin(zero),
+      padding(zero)
+    ]);
+
+    global("li", [
+      listStyleType(none)
     ]);
 
     global("*, *:after, *:before", [
-       boxSizing(borderBox)
+      boxSizing(borderBox)
     ]);
 
     global("input", [
@@ -35,6 +40,8 @@ module Colors = {
       whiteSpace(normal),
       background(none),
       lineHeight(px(13)),
+      fontWeight(bold),
+      width(pct(100.0)),
       /* Browsers have different default form fonts */
       color(lightestGray),
       fontSize(px(20)),

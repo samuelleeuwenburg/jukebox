@@ -4,9 +4,6 @@ module Index = {
         switch (Utils.getToken()) {
         | Some(token) => {
             <>
-                <div className="header">
-                    <Logout />
-                </div>
                 <App token=token />
             </>
         }

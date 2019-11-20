@@ -9,9 +9,14 @@ module Styles = {
          ])
     ]);
 
+    let logoutContainer = style([
+        position(absolute),
+        right(px(40))
+    ]);
+
     let header = style([
         height(px(60)),
-        backgroundColor(Style.Colors.darkGray),
+        backgroundColor(Style.Colors.darkerGray),
         width(pct(100.0)),
         padding2(zero, px(20)),
         display(`flex),
@@ -78,9 +83,14 @@ let make = (~token: string) => {
         None;
     });
 
+
+
     <>
     <div className=Styles.header>
         <Search dispatch=dispatch token=token state=state />
+        <div className=Styles.logoutContainer>
+            <Logout />
+        </div>
     </div>
     <div className=Styles.appContainer>
         <Info state=state />

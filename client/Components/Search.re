@@ -1,16 +1,67 @@
 module Styles = {
     open Css;
 
-    let input = style([
+    let searchContainer = style([
+        maxWidth(px(500)),
+        flexBasis(pct(100.0))
+    ]);
 
+    let inputContainer = style([
+    ]);
+
+    let input = style([
+    ]);
+
+    let trackName = style([
+        fontSize(px(18))
+    ]);
+
+    let artistName = style([
+        fontSize(px(16)),
+        color(Style.Colors.lightGray)
+    ]);
+
+    let trackInfoContainer = style([
+        display(`flex),
+        flexDirection(column),
+        justifyContent(center)
+    ])
+
+    let trackContainer = style([
+        display(`flex),
+        flexWrap(wrap),
+        flexDirection(row),
+        marginBottom(px(20)),
+        cursor(`pointer),
+        selector("&:hover", [
+            backgroundColor(Style.Colors.darkGray)
+        ])
+    ]);
+
+    let albumCover = style ([
+        width(px(60)),
+        height(px(60)),
+        backgroundPosition(center),
+        backgroundSize(cover),
+        marginRight(px(20))
     ]);
 
     let resultsContainer = style([
         position(absolute),
-        backgroundColor(Style.Colors.darkGray),
+        backgroundColor(Style.Colors.darkerGray),
         top(px(60)),
-        padding2(px(20), px(40)),
-        transform(translateX(px(-40)))
+        padding2(px(20), px(20)),
+        transform(translateX(px(-20))),
+        width(pct(100.0)),
+        overflow(auto),
+        left(px(20)),
+        maxHeight(`calc(`sub, vh(100.0), px(60))),
+        media("(min-width: 640px)", [
+            padding2(px(20), px(20)),
+            width(px(580)),
+            transform(translateX(px(-40))),
+            left(initial)
+        ])
     ])
 }   
 
@@ -28,9 +79,10 @@ module Track = {
     let make = (~track: Spotify.track, ~token: string, ~user: Spotify.user, ~socket: IO.socket) => {
         let artist = List.hd(track.artists);
 
+        let image = track.album.images
+        |> List.find((image: Spotify.image) => image.width == 640);
+
         let addTrack = React.useCallback0(() => {
-            let image = track.album.images
-            |> List.find((image: Spotify.image) => image.width == 640);
 
             let data = Json.Encode.(object_([
                 ("id", string(track.id)),
@@ -46,13 +98,23 @@ module Track = {
             
             // dispatch(Types.ClearSearch);
             IO.socketEmit(socket, "addTrack", data) |> ignore;
+
         });
 
-        <li onClick={_ => addTrack()}>{React.string("add")}
-            {React.string(" | ")}
-            <strong>{React.string(artist.name)}</strong>
-            {React.string(" - ")}
-            {React.string(track.name)}
+        <li className=Styles.trackContainer onClick={_ => addTrack()}>
+            <div 
+                className=Styles.albumCover
+                style=(ReactDOMRe.Style.make(~backgroundImage="url('"++image.url++"')", ()))
+            >
+            </div>
+            <div className=Styles.trackInfoContainer>
+                <div className=Styles.trackName>
+                    <strong>{React.string(track.name)}</strong>
+                </div>
+                <div className=Styles.artistName>
+                    {React.string(artist.name)}
+                </div>
+            </div>
         </li>
     };
 };
@@ -91,8 +153,8 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     })
     ->Belt.Option.getWithDefault(React.null);
 
-    <div className="search-container">
-        <div className="search-input-container">
+    <div className=Styles.searchContainer>
+        <div className=Styles.inputContainer>
             <input
                 className=Styles.input
                 placeholder="Search for tracks"
