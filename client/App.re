@@ -14,6 +14,11 @@ module Styles = {
         right(px(40))
     ]);
 
+    let infoContainer = style([
+        position(absolute),
+        left(px(40))
+    ]);
+
     let header = style([
         height(px(60)),
         backgroundColor(Style.Colors.darkerGray),
@@ -87,13 +92,15 @@ let make = (~token: string) => {
 
     <>
     <div className=Styles.header>
+        <div className=Styles.infoContainer>
+            <Info state=state />
+        </div>
         <Search dispatch=dispatch token=token state=state />
         <div className=Styles.logoutContainer>
             <Logout />
         </div>
     </div>
     <div className=Styles.appContainer>
-        <Info state=state />
         <Now dispatch=dispatch state=state token=token />
         <Queue dispatch=dispatch state=state token=token />
     </div>

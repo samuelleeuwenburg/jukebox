@@ -11,24 +11,24 @@ module Styles = {
 let make = (~state: Types.state) => {
     let user = state.user
         ->Belt.Option.map(user => {
-            <p>
+            <div>
                 <strong>{React.string("user: ")}</strong>
                 {React.string(user.displayName)}
-            </p>
+            </div>
         })
         ->Belt.Option.getWithDefault(
-            <p className=Styles.error>{React.string("ERROR: no user found!")}</p>
+            <div className=Styles.error>{React.string("ERROR: no user found!")}</div>
         );
 
     let player = state.player
         ->Belt.Option.map(player => {
-            <p>
+            <div>
                 <strong>{React.string("device: ")}</strong>
                 {React.string(player.device.name)}
-            </p>
+            </div>
         })
         ->Belt.Option.getWithDefault(
-            <p className=Styles.error>{React.string("WARNING: no device found!")}</p>
+            <div className=Styles.error>{React.string("WARNING: no device found!")}</div>
         );
 
     <>
