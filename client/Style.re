@@ -13,7 +13,7 @@ module Colors = {
     global("body", [
       backgroundColor(darkestGray),
       margin(zero),
-      color(hex("dbdbdb")),
+      color(lightestGray),
       fontFamily("sans-serif"),
     ]);
 
