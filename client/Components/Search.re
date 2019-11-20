@@ -48,6 +48,7 @@ module Styles = {
 
     let resultsContainer = style([
         position(absolute),
+        zIndex(999),
         backgroundColor(Style.Colors.darkerGray),
         top(px(60)),
         padding2(px(20), px(20)),
@@ -149,7 +150,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         |> Array.of_list
         |> React.array;
 
-        <ul>{tracks}</ul>
+        <ul className=Styles.resultsContainer>{tracks}</ul>
     })
     ->Belt.Option.getWithDefault(React.null);
 
@@ -164,8 +165,6 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
             <button onClick={_ => clearSearch()}>{React.string("clear")}</button>
             <button onClick={_ => getTracks()}>{React.string("search")}</button>
         </div>
-        <div className=Styles.resultsContainer>
-            {results}
-        </div>
+        {results}
     </div>
 };
