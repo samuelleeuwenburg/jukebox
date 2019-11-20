@@ -5,34 +5,77 @@ module Styles = {
         color(Style.Colors.error),
         fontWeight(bold),
     ]);
+    let tracksContainer = style([
+        height(`calc(`sub, vh(100.0), px(440))),
+        overflowX(auto),
+        media("(min-width: 640px)", [
+            height(`calc(`sub, vh(100.0), px(465))),
+        ])
+    ]);
 
     let trackContainer = style([
         display(`flex),
         flexWrap(wrap),
         flexDirection(row),
         width(pct(100.0)),
-        padding2(px(10), px(0)),
         alignItems(center),
-        borderBottom(px(1), `solid, Style.Colors.gray),
-        selector("&:first-child", [
-            borderTop(px(1), `solid, Style.Colors.gray)
-        ]),
-    ]);
-
-    let column = style([
-        width(`calc(`sub, pct(33.0), px(40))),
-        marginRight(px(20)),
-        textOverflow(ellipsis),
-        overflow(hidden),
-        whiteSpace(nowrap),
-        selector("&:last-child", [
-            marginRight(zero)
-        ]),
+        padding3(zero, zero, px(10)),
         media("(min-width: 640px)", [
-            width(`calc(`sub, pct(25.0), px(35)))
+            padding2(px(10), px(0)),
+            borderBottom(px(1), `solid, Style.Colors.gray),
+            selector("&:first-child", [
+                borderTop(px(1), `solid, Style.Colors.gray)
+            ]),
         ])
     ]);
     
+    let trackInfoContainer = style([
+        width(`calc(`sub, pct(100.0), px(165))),
+        marginRight(px(20)),
+        media("(min-width: 640px)", [
+            width(`calc(`sub, pct(50.0), px(35))),
+            marginRight(zero)
+        ])
+    ]);
+
+    let column = style([
+        textOverflow(ellipsis),
+        overflow(hidden),
+        whiteSpace(nowrap),
+        fontSize(px(16)),
+        selector("&:last-child", [
+            marginRight(zero),
+            color(Style.Colors.lightGray),
+            media("(min-width: 640px)", [
+                marginRight(px(20)),
+                fontSize(px(18)),
+                color(Style.Colors.lightestGray)
+            ])
+        ]),
+        selector("&:first-child", [
+            fontWeight(bold),
+            color(Style.Colors.lightestGray),
+            media("(min-width: 640px)", [
+                fontWeight(normal),
+            ])
+        ]),
+        media("(min-width: 640px)", [
+            marginRight(px(20)),
+            width(`calc(`sub, pct(50.0), px(35))),
+            fontSize(px(18)),
+            display(inlineBlock)
+        ])
+    ]);
+
+    let queueTitle = style([
+        fontSize(px(22)),
+        marginBottom(px(10)),
+        media("(min-width: 640px)", [
+            fontSize(px(24)),
+            marginBottom(px(20))
+        ])
+    ]);
+
     let addedByColumn = style([
         width(`calc(`sub, pct(25.0), px(35))),
         marginRight(px(20)),
@@ -40,11 +83,16 @@ module Styles = {
         overflow(hidden),
         whiteSpace(nowrap),
         display(none),
-        selector("&:last-child", [
-            marginRight(zero)
-        ]),
         media("(min-width: 640px)", [
-            display(block)
+            display(block),
+            color(Style.Colors.lightestGray)
+        ])
+    ]);
+
+    let voteColumn = style([
+        width(px(85)),
+        media("(min-width: 640px)", [
+            width(`calc(`sub, pct(25.0), px(35))),
         ])
     ]);
 
@@ -55,7 +103,10 @@ module Styles = {
         backgroundColor(red),
         backgroundPosition(center),
         backgroundSize(cover),
-        marginRight(px(40))
+        marginRight(px(20)),
+        media("(min-width: 640px)", [
+            marginRight(px(40)),
+        ])
     ]);
 };
 
@@ -81,16 +132,18 @@ module Track = {
                 style=(ReactDOMRe.Style.make(~backgroundImage="url('"++track.imageUrl++"')", ()))
             >
             </div>
-            <div className=Styles.column>
-                {React.string(track.name)}
-            </div>
-            <div className=Styles.column>
-                {React.string(track.name)}
+            <div className=Styles.trackInfoContainer>
+                <div className=Styles.column>
+                    {React.string(track.name)}
+                </div>
+                <div className=Styles.column>
+                    {React.string(track.name)}
+                </div>
             </div>
             <div className=Styles.addedByColumn>
                 {React.string(user.displayName)}
             </div>
-            <div className=Styles.column>
+            <div className=Styles.voteColumn>
                 <button onClick={_ => voteTrack()}>{React.string("vote")}</button>
                 <strong>{React.string("+" ++ string_of_int(List.length(track.upvotes)) ++ " ")}</strong>
             </div>
@@ -113,7 +166,7 @@ let make = (~dispatch, ~state: Types.state, ~token: string) => {
         })
         |> Array.of_list
         |> React.array;
-        <ul>{tracks}</ul>
+        <ul className=Styles.tracksContainer>{tracks}</ul>
     })
     ->Belt.Option.getWithDefault(
         <p className=Styles.error>{React.string("ERROR: no queue found!")}</p>
@@ -121,7 +174,7 @@ let make = (~dispatch, ~state: Types.state, ~token: string) => {
 
 
     <>
-        <h2>{React.string("Next in queue")}</h2>
+        <h2 className=Styles.queueTitle>{React.string("Next in queue")}</h2>
         {tracks}
     </>
 };

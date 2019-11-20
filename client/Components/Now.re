@@ -6,41 +6,69 @@ module Styles = {
         flexDirection(row),
         flexWrap(wrap),
         minHeight(px(170)),
-        marginBottom(px(40))
+        marginBottom(px(20)),
+        media("(min-width: 640px)", [
+            marginBottom(px(40)),
+        ])
     ]);
     
     let trackContainer = style([
         flexGrow(1.0),
         display(`flex),
         flexDirection(column),
-        position(relative)
+        position(relative),
+        width(pct(100.0)),
+        media("(min-width: 640px)", [
+            width(`calc(`sub, pct(100.0), px(190))),
+        ])
     ]);
 
     let currentTrack = style([
         fontWeight(bold),
-        fontSize(px(22))
+        fontSize(px(16)),        
+        textOverflow(ellipsis),
+        overflow(hidden),
+        whiteSpace(nowrap),
+        media("(min-width: 640px)", [
+            fontSize(px(22)),        
+        ])
     ]);
 
     let currentArtist = style([
-        fontSize(px(20)),
-        color(Style.Colors.lightGray)
+        fontSize(px(14)),
+        color(Style.Colors.lightGray),
+        textOverflow(ellipsis),
+        overflow(hidden),
+        whiteSpace(nowrap),
+        marginBottom(px(20)),
+        media("(min-width: 640px)", [
+            fontSize(px(22)),        
+            marginBottom(px(0))
+        ])
     ])
 
     let albumCover = style([
         backgroundPosition(center),
         backgroundSize(cover),
-        width(px(170)),
-        height(px(170)),
-        marginRight(px(20))
-        
+        width(px(150)),
+        height(px(150)),
+        marginBottom(px(10)),
+        margin3(zero, auto, px(10)),
+        media("(min-width: 640px)", [
+            width(px(170)),
+            height(px(170)),
+            margin4(zero, px(20), zero, zero),
+        ])
     ]);
     
     let progressBar = style([
         width(pct(100.0)),
         backgroundColor(Style.Colors.gray),
         height(px(6)),
-        position(absolute),
-        bottom(zero)
+        media("(min-width: 640px)", [
+            position(absolute),
+            bottom(zero),
+        ]) 
     ]);
 
     let progression = style([

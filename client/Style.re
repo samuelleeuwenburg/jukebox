@@ -21,6 +21,11 @@ module Colors = {
       margin3(zero, zero, px(20)),
     ]);
 
+    global("button", [
+      color(hex("fff")),
+      backgroundColor(darkGray)
+    ]);
+    
     global("ul, ol", [
       margin(zero),
       padding(zero)

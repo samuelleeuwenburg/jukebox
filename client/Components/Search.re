@@ -33,7 +33,7 @@ module Styles = {
         flexDirection(column),
         justifyContent(center),
         width(`calc(`sub, pct(100.0), px(80)))
-    ])
+    ]);
 
     let trackContainer = style([
         display(`flex),
@@ -52,6 +52,11 @@ module Styles = {
         backgroundPosition(center),
         backgroundSize(cover),
         marginRight(px(20))
+    ]);
+
+    let searchButton = style([
+        backgroundColor(Style.Colors.darkGray),
+        color(hex("fff"))
     ]);
 
     let resultsContainer = style([
@@ -153,7 +158,9 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         let (results, user) = values;
         let tracks = results.items
         |> List.map(track => {
-            <Track socket=state.socket token=token track=track key=track.uri user=user />
+            <div onClick={_ => clearSearch()}>
+                <Track socket=state.socket token=token track=track key=track.uri user=user />
+            </div>
         })
         |> Array.of_list
         |> React.array;
@@ -170,8 +177,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 value={state.query} 
                 onChange={event => dispatch(Types.UpdateQuery(ReactEvent.Form.target(event)##value))}
             />
-            <button onClick={_ => clearSearch()}>{React.string("clear")}</button>
-            <button onClick={_ => getTracks()}>{React.string("search")}</button>
+            <button className=Styles.searchButton onClick={_ => getTracks()}>{React.string("search")}</button>
         </div>
         {results}
     </div>
