@@ -11,3 +11,9 @@ let socketOn = [%bs.raw
         socket.on(event, callback);
     } |}
 ];
+
+let socketEmit = [%bs.raw
+    {| function(socket, event, data) {
+        socket.emit(event, data);
+    } |}
+];

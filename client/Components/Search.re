@@ -1,13 +1,36 @@
+
 module Track = {
+    type partialTrack = {
+        id: string,
+        name: string,
+        uri: string,
+        userId: string,
+        imageUrl: string,
+        durationMs: int,
+    };
+
     [@react.component]
-    let make = (~track: Spotify.track, ~token: string, ~user: Spotify.user, ~dispatch) => {
+    let make = (~track: Spotify.track, ~token: string, ~user: Spotify.user, ~socket: IO.socket) => {
         let artist = List.hd(track.artists);
 
         let addTrack = React.useCallback0(() => {
-            Bragi.addTrack(user, track)
-            |> Js.Promise.then_(_ => {
-                dispatch(Types.ClearSearch) |> Js.Promise.resolve;
-            }) |> ignore;
+            let image = track.album.images
+            |> List.find((image: Spotify.image) => image.width == 640);
+
+            let data = Json.Encode.(object_([
+                ("id", string(track.id)),
+                ("name", string(track.name)),
+                ("uri", string(track.uri)),
+                ("userId", string(user.id)),
+                ("imageUrl", string(image.url)),
+                ("durationMs", int(track.durationMs)),
+            ])); 
+
+            Js.log("adding track");
+            Js.log(data);
+            
+            // dispatch(Types.ClearSearch);
+            IO.socketEmit(socket, "addTrack", data) |> ignore;
         });
 
         <li onClick={_ => addTrack()}>{React.string("add")}
@@ -44,7 +67,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         let (results, user) = values;
         let tracks = results.items
         |> List.map(track => {
-            <Track dispatch=dispatch token=token track=track key=track.uri user=user />
+            <Track socket=state.socket token=token track=track key=track.uri user=user />
         })
         |> Array.of_list
         |> React.array;

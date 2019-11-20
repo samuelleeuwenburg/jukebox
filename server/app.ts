@@ -62,6 +62,7 @@ server.listen(3000, () => {
             }
 
             addTrack(state, track)
+            io.emit('newQueue', state)
         })
 
         socket.on('getQueue', () => {
@@ -90,9 +91,11 @@ function loop(state: Queue, io: Server) {
             return
         }
 
+        const now = Date.now()
         const songEndsAt = state.currentTrack.timestamp
             + state.currentTrack.track.durationMs
-        const now = Date.now()
+        state.currentTrack.position = now - state.currentTrack.timestamp
+
         if (now > songEndsAt) {
             log('ENDED ->', state.currentTrack.track)
             clearInterval(intervalId)
@@ -141,7 +144,7 @@ function removeTrack(state: Queue, trackId: string) {
 
 function sortQueue(state: Queue) {
     state.tracks = state.tracks
-        .sort((a, b) => a.upvotes.length > b.upvotes.length ? 1 : -1)
+        .sort((a, b) => a.upvotes.length > b.upvotes.length ? -1 : 1)
 }
 
 function log(...messages: any[]) {

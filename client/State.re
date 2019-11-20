@@ -15,25 +15,15 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.UpdateUser(user) => {...state, user: Some(user)}
     | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
     | Types.UpdateResults(response) => {...state, results: Some(response)}
-    | Types.UpdateCurrentTrackAndCursor(currentTrack) => {...state, currentTrack: Some(currentTrack)}
-    | Types.UpdateCurrentTrack(track, _timestamp) => {
-        {
-            ...state,
-            currentTrack: Some({
-                cursor: 0,
-                timestamp: int_of_float(Js.Date.now()),
-                track: track
-            })
-        }
-    }
+    | Types.UpdateCurrentTrack(currentTrack) => { ...state, currentTrack: Some(currentTrack)}
     | Types.Tick => {
         state.currentTrack
         ->Belt.Option.map(currentTrack => {
-            let cursor = int_of_float(Js.Date.now()) - currentTrack.timestamp;
-            if (cursor > currentTrack.track.durationMs) {
+            let position = int_of_float(Js.Date.now()) - currentTrack.timestamp;
+            if (position > currentTrack.track.durationMs) {
                 {...state, currentTrack: None }
             } else {
-                {...state, currentTrack: Some({ ...currentTrack, cursor })}
+                {...state, currentTrack: Some({ ...currentTrack, position })}
             }
         })
         ->Belt.Option.getWithDefault(state);

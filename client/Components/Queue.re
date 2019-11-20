@@ -42,9 +42,18 @@ module Styles = {
 
 module Track = {
     [@react.component]
-    let make = (~dispatch, ~track: Bragi.track, ~user: Spotify.user) => {
+    let make = (~socket: IO.socket, ~track: Bragi.track, ~user: Spotify.user) => {
         let voteTrack = React.useCallback0(() => {
-            Bragi.vote(user, track) |> ignore;
+            let data = Json.Encode.(object_([
+                ("trackId", string(track.id)),
+                ("userId", string(user.id)),
+            ])); 
+
+            Js.log("voting on track");
+            Js.log(data);
+            
+            IO.socketEmit(socket, "vote", data) |> ignore;
+            ();
         });
 
         <li className=Styles.trackContainer>
@@ -64,7 +73,7 @@ module Track = {
             </div>
             <div className=Styles.column>
                 <button onClick={_ => voteTrack()}>{React.string("vote")}</button>
-                <strong>{React.string("+" ++ string_of_int(track.upvotes) ++ " ")}</strong>
+                <strong>{React.string("+" ++ string_of_int(List.length(track.upvotes)) ++ " ")}</strong>
             </div>
         </li>
     }
@@ -72,21 +81,6 @@ module Track = {
 
 [@react.component]
 let make = (~dispatch, ~state: Types.state, ~token: string) => {
-    React.useEffect0(() => {
-        Js.Promise.(
-            Bragi.getQueue()
-            |> then_(queue => {
-                dispatch(Types.UpdateQueue(queue));
-                resolve(queue)
-            })
-        ) |> ignore;
-
-        IO.socketOn(state.socket, "queueUpdate", (json) => {
-            let queue = json |> Bragi.Decode.queue;
-            dispatch(Types.UpdateQueue(queue)) |> ignore;
-        });
-    });
-
     let tracks = state.queue
     ->Belt.Option.flatMap(queue => {
         state.user->Belt.Option.map(user => (queue, user));
@@ -96,7 +90,7 @@ let make = (~dispatch, ~state: Types.state, ~token: string) => {
         let (queue, user) = values;
         let tracks = queue.tracks
         |> List.map(track => {
-            <Track key=track.spotifyTrackId dispatch=dispatch track=track user=user />
+            <Track key=track.id socket=state.socket track=track user=user />
         })
         |> Array.of_list
         |> React.array;
