@@ -4,7 +4,9 @@ module Styles = {
     let currentTrackContainer = style([
         display(`flex),
         flexDirection(row),
-        flexWrap(wrap)
+        flexWrap(wrap),
+        minHeight(px(170)),
+        marginBottom(px(40))
     ]);
     
     let trackContainer = style([

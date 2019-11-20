@@ -17,6 +17,10 @@ module Colors = {
       fontFamily("sans-serif"),
     ]);
 
+    global("h1, h2, h3", [
+      margin3(zero, zero, px(20)),
+    ]);
+
     global("ul, ol", [
       margin(zero),
       padding(zero)
