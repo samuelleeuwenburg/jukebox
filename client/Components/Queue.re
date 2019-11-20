@@ -16,19 +16,38 @@ module Styles = {
         borderBottom(px(1), `solid, Style.Colors.gray),
         selector("&:first-child", [
             borderTop(px(1), `solid, Style.Colors.gray)
-        ])
+        ]),
     ]);
 
     let column = style([
-        width(`calc(`sub, pct(25.0), px(35))),
+        width(`calc(`sub, pct(33.0), px(40))),
         marginRight(px(20)),
         textOverflow(ellipsis),
         overflow(hidden),
         whiteSpace(nowrap),
         selector("&:last-child", [
             marginRight(zero)
+        ]),
+        media("(min-width: 640px)", [
+            width(`calc(`sub, pct(25.0), px(35)))
         ])
     ]);
+    
+    let addedByColumn = style([
+        width(`calc(`sub, pct(25.0), px(35))),
+        marginRight(px(20)),
+        textOverflow(ellipsis),
+        overflow(hidden),
+        whiteSpace(nowrap),
+        display(none),
+        selector("&:last-child", [
+            marginRight(zero)
+        ]),
+        media("(min-width: 640px)", [
+            display(block)
+        ])
+    ]);
+
 
     let albumCover = style([
         width(px(40)),
@@ -68,7 +87,7 @@ module Track = {
             <div className=Styles.column>
                 {React.string(track.name)}
             </div>
-            <div className=Styles.column>
+            <div className=Styles.addedByColumn>
                 {React.string(user.displayName)}
             </div>
             <div className=Styles.column>

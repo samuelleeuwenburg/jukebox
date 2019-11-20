@@ -1,3 +1,18 @@
+module Styles = {
+    open Css;
+
+    let input = style([
+
+    ]);
+
+    let resultsContainer = style([
+        position(absolute),
+        backgroundColor(Style.Colors.darkGray),
+        top(px(60)),
+        padding2(px(20), px(40)),
+        transform(translateX(px(-40)))
+    ])
+}   
 
 module Track = {
     type partialTrack = {
@@ -79,13 +94,15 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     <div className="search-container">
         <div className="search-input-container">
             <input
+                className=Styles.input
+                placeholder="Search for tracks"
                 value={state.query} 
                 onChange={event => dispatch(Types.UpdateQuery(ReactEvent.Form.target(event)##value))}
             />
             <button onClick={_ => clearSearch()}>{React.string("clear")}</button>
             <button onClick={_ => getTracks()}>{React.string("search")}</button>
         </div>
-        <div className="search-results-container">
+        <div className=Styles.resultsContainer>
             {results}
         </div>
     </div>

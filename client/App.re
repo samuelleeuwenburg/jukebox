@@ -1,9 +1,26 @@
 module Styles = {
     open Css;
-
     let appContainer = style([
         maxWidth(px(1024)),
-        margin2(zero, auto)
+        margin2(zero, auto),
+        padding(px(20)),
+        media("(min-width: 640px)", [
+            padding(px(40))
+         ])
+    ]);
+
+    let header = style([
+        height(px(60)),
+        backgroundColor(Style.Colors.darkGray),
+        width(pct(100.0)),
+        padding2(zero, px(20)),
+        display(`flex),
+        justifyContent(center),
+        alignItems(center),
+        position(relative),
+        media("(min-width: 640px)", [
+            padding2(zero, px(40))
+        ]) 
     ]);
 
 }
@@ -61,10 +78,14 @@ let make = (~token: string) => {
         None;
     });
 
+    <>
+    <div className=Styles.header>
+        <Search dispatch=dispatch token=token state=state />
+    </div>
     <div className=Styles.appContainer>
         <Info state=state />
-        <Search dispatch=dispatch state=state token=token />
         <Now dispatch=dispatch state=state token=token />
         <Queue dispatch=dispatch state=state token=token />
     </div>
+    </>
 };
