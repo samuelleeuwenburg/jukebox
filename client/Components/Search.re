@@ -13,18 +13,26 @@ module Styles = {
     ]);
 
     let trackName = style([
-        fontSize(px(18))
+        fontSize(px(18)),
+        fontWeight(bold),
+        textOverflow(ellipsis),
+        overflow(hidden),
+        whiteSpace(nowrap),
     ]);
 
     let artistName = style([
         fontSize(px(16)),
-        color(Style.Colors.lightGray)
+        color(Style.Colors.lightGray),
+        textOverflow(ellipsis),
+        overflow(hidden),
+        whiteSpace(nowrap),
     ]);
 
     let trackInfoContainer = style([
         display(`flex),
         flexDirection(column),
-        justifyContent(center)
+        justifyContent(center),
+        width(`calc(`sub, pct(100.0), px(80)))
     ])
 
     let trackContainer = style([
@@ -110,7 +118,7 @@ module Track = {
             </div>
             <div className=Styles.trackInfoContainer>
                 <div className=Styles.trackName>
-                    <strong>{React.string(track.name)}</strong>
+                    {React.string(track.name)}
                 </div>
                 <div className=Styles.artistName>
                     {React.string(artist.name)}
