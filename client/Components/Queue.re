@@ -68,7 +68,7 @@ module Styles = {
     ]);
 
     let queueTitle = style([
-        fontSize(px(22)),
+        fontSize(px(20)),
         marginBottom(px(10)),
         media("(min-width: 640px)", [
             fontSize(px(24)),
