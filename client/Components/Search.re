@@ -90,14 +90,13 @@ module Track = {
     };
 
     [@react.component]
-    let make = (~track: Spotify.track, ~token: string, ~user: Spotify.user, ~socket: IO.socket) => {
+    let make = (~dispatch, ~track: Spotify.track, ~token: string, ~user: Spotify.user, ~socket: IO.socket) => {
         let artist = List.hd(track.artists);
 
         let image = track.album.images
         |> List.find((image: Spotify.image) => image.width == 640);
 
         let addTrack = React.useCallback0(() => {
-
             let data = Json.Encode.(object_([
                 ("id", string(track.id)),
                 ("name", string(track.name)),
@@ -110,9 +109,8 @@ module Track = {
             Js.log("adding track");
             Js.log(data);
             
-            // dispatch(Types.ClearSearch);
+            dispatch(Types.ClearSearch);
             IO.socketEmit(socket, "addTrack", data) |> ignore;
-
         });
 
         <li className=Styles.trackContainer onClick={_ => addTrack()}>
@@ -135,10 +133,6 @@ module Track = {
 
 [@react.component]
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
-    let clearSearch = React.useCallback0(() => {
-        dispatch(Types.ClearSearch);
-    });
-
     let getTracks = React.useCallback1(() => {
         Js.Promise.(
             Spotify.getTracks(token, state.query)
@@ -158,9 +152,14 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         let (results, user) = values;
         let tracks = results.items
         |> List.map(track => {
-            <div onClick={_ => clearSearch()}>
-                <Track socket=state.socket token=token track=track key=track.uri user=user />
-            </div>
+            <Track
+                key=track.uri
+                socket=state.socket
+                token=token
+                track=track
+                user=user
+                dispatch=dispatch
+            />
         })
         |> Array.of_list
         |> React.array;
