@@ -4,10 +4,10 @@ module Styles = {
     let searchContainer = style([
         maxWidth(px(500)),
         flexBasis(pct(100.0)),
-        position(relative)
     ]);
 
     let inputContainer = style([
+        position(relative)
     ]);
 
     let input = style([
@@ -66,9 +66,9 @@ module Styles = {
         position(absolute),
         zIndex(999),
         backgroundColor(Style.Colors.darkerGray),
-        top(px(42)),
+        top(px(60)),
         padding(px(20)),
-        transform(translateX(px(-40))),
+        transform(translateX(px(-20))),
         width(pct(100.0)),
         overflow(auto),
         left(px(20)),
