@@ -3,7 +3,8 @@ module Styles = {
 
     let searchContainer = style([
         maxWidth(px(500)),
-        flexBasis(pct(100.0))
+        flexBasis(pct(100.0)),
+        position(relative)
     ]);
 
     let inputContainer = style([
@@ -54,24 +55,26 @@ module Styles = {
         marginRight(px(20))
     ]);
 
-    let searchButton = style([
-        backgroundColor(Style.Colors.darkGray),
-        color(hex("fff"))
+    let searchButtonContainer = style([
+        position(absolute),
+        right(zero),
+        top(zero),
+        cursor(`pointer)
     ]);
 
     let resultsContainer = style([
         position(absolute),
         zIndex(999),
         backgroundColor(Style.Colors.darkerGray),
-        top(px(60)),
-        padding2(px(20), px(20)),
-        transform(translateX(px(-20))),
+        top(px(42)),
+        padding(px(20)),
+        transform(translateX(px(-40))),
         width(pct(100.0)),
         overflow(auto),
         left(px(20)),
         maxHeight(`calc(`sub, vh(100.0), px(60))),
         media("(min-width: 640px)", [
-            padding2(px(20), px(20)),
+            padding2(px(20), px(40)),
             width(px(580)),
             transform(translateX(px(-40))),
             left(initial)
@@ -176,7 +179,17 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 value={state.query} 
                 onChange={event => dispatch(Types.UpdateQuery(ReactEvent.Form.target(event)##value))}
             />
-            <button className=Styles.searchButton onClick={_ => getTracks()}>{React.string("search")}</button>
+            <span className=Styles.searchButtonContainer onClick={_ => getTracks()}>
+                <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">
+                    <path 
+                        id="iconfinder_67_111124" 
+                        d="M61.415,58.451a1.39,1.39,0,0,1-1.965,1.968L55.427,56.4a6.131,6.131,0,1,1,1.968-1.968Zm-4.847-7.257a4.378,4.378,0,1,0-4.378,4.378A4.379,4.379,0,0,0,56.568,51.194Z" 
+                        transform="translate(-46.062 -45.065)" 
+                        fill="#858585" 
+                        fillRule="evenodd"
+                    />
+                </svg>
+            </span>
         </div>
         {results}
     </div>

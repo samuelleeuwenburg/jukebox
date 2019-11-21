@@ -51,6 +51,7 @@ module Colors = {
       lineHeight(px(13)),
       fontWeight(bold),
       width(pct(100.0)),
+      outline(px(0), none, `hex("000000")),
       /* Browsers have different default form fonts */
       color(lightestGray),
       fontSize(px(20)),
