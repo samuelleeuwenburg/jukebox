@@ -33,7 +33,7 @@ module Styles = {
         width(`calc(`sub, pct(100.0), px(119))),
         marginRight(px(20)),
         media("(min-width: 640px)", [
-            width(`calc(`sub, pct(66.0), px(70))),
+            width(`calc(`sub, pct(66.0), px(92))),
             marginRight(zero)
         ])
     ]);
@@ -81,7 +81,7 @@ module Styles = {
     ]);
 
     let addedByColumn = style([
-        width(`calc(`sub, pct(33.0), px(83))),
+        width(`calc(`sub, pct(33.0), px(61))),
         marginRight(px(20)),
         textOverflow(ellipsis),
         overflow(hidden),
