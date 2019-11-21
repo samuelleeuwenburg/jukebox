@@ -144,7 +144,11 @@ function removeTrack(state: Queue, trackId: string) {
 
 function sortQueue(state: Queue) {
     state.tracks = state.tracks
-        .sort((a, b) => a.upvotes.length > b.upvotes.length ? -1 : 1)
+        .sort((a, b) => {
+            return a.upvotes.length === b.upvotes.length
+                ? a.timestamp - b.timestamp
+                : b.upvotes.length - a.upvotes.length
+        })
 }
 
 function log(...messages: any[]) {

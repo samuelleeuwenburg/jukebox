@@ -33,6 +33,7 @@ module Styles = {
 [@react.component]
 let make = (~token: string) => {
     let (state, dispatch) = React.useReducer(State.reducer, State.initialState);
+
     React.useEffect0(() => {
         IO.socketEmit(state.socket, "getQueue", ());
         IO.socketOn(state.socket, "newQueue", (json) => {
@@ -48,7 +49,7 @@ let make = (~token: string) => {
                     token,
                     currentTrack.track.uri,
                     currentTrack.position,
-                );
+                ) |> ignore;
                 dispatch(Types.UpdateCurrentTrack(currentTrack))
             }
             | Some(current) => {
@@ -57,14 +58,15 @@ let make = (~token: string) => {
                         token,
                         currentTrack.track.uri,
                         0,
-                    );
+                    ) |> ignore;
                     dispatch(Types.UpdateCurrentTrack(currentTrack))
                 }
             }
             };
         }) |> ignore;
 
-        Js.Global.setInterval(() => dispatch(Types.Tick), 160);
+        Js.Global.setInterval(() => dispatch(Types.Tick), 160)
+        |> ignore;
 
         Js.Promise.(
             Spotify.getPlayer(token)

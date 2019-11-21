@@ -15,7 +15,15 @@ let reducer = (state: Types.state, action: Types.action) => {
     | Types.UpdateUser(user) => {...state, user: Some(user)}
     | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
     | Types.UpdateResults(response) => {...state, results: Some(response)}
-    | Types.UpdateCurrentTrack(currentTrack) => { ...state, currentTrack: Some(currentTrack)}
+    | Types.UpdateCurrentTrack(currentTrack) => {
+        {
+            ...state,
+            currentTrack: Some({
+                ...currentTrack,
+                timestamp: int_of_float(Js.Date.now()) - currentTrack.position,
+            })
+        }
+    }
     | Types.Tick => {
         state.currentTrack
         ->Belt.Option.map(currentTrack => {
