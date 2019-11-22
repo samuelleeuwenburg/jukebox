@@ -31,17 +31,18 @@
     "http": "0.0.0",
     "install": "^0.13.0",
     "npm": "^6.13.0",
+    "re-debouncer": "^2.0.0",
     "react": "^16.8.1",
     "react-dom": "^16.8.1",
     "reason-react": ">=0.7.0",
     "socket.io": "^2.3.0",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.7.2",
-    "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.10"
+    "webpack": "^4.41.2"
   },
   "devDependencies": {
     "bs-platform": "^5.2.1",
-    "moduleserve": "^0.8.4"
+    "moduleserve": "^0.8.4",
+    "webpack-cli": "^3.3.10"
   }
 }

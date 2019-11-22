@@ -1,5 +1,4 @@
 let initialState: Types.state = {
-    query: "",
     results: None,
     player: None,
     user: None,
@@ -10,7 +9,6 @@ let initialState: Types.state = {
 
 let reducer = (state: Types.state, action: Types.action) => {
     switch (action) {
-    | Types.UpdateQuery(query) => {...state, query: query}
     | Types.UpdatePlayer(player) => {...state, player: Some(player)}
     | Types.UpdateUser(user) => {...state, user: Some(user)}
     | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
@@ -36,7 +34,7 @@ let reducer = (state: Types.state, action: Types.action) => {
         })
         ->Belt.Option.getWithDefault(state);
     }
-    | Types.ClearSearch => {...state, query: "", results: None}
+    | Types.ClearSearch => {...state, results: None}
     | Types.Error => state
     };
 };

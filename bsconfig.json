@@ -16,6 +16,7 @@
   "namespace": true,
   "bs-dependencies": [
     "reason-react",
+    "re-debouncer",
     "bs-fetch",
     "bs-webapi",
     "bs-css",

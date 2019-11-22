@@ -1,3 +1,5 @@
+open Debouncer;
+
 module Styles = {
     open Css;
 
@@ -127,15 +129,16 @@ module Track = {
 
 [@react.component]
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
-    let getTracks = React.useCallback1(() => {
+    let getTracks(value) = {
+        Js.log(value);
         Js.Promise.(
-            Spotify.getTracks(token, state.query)
+            Spotify.getTracks(token, value)
             |> then_(tracks => {
                 dispatch(Types.UpdateResults(tracks));
                 resolve(tracks)
             })
         ) |> ignore;
-    }, [|state.query|]);
+    };
 
     let results = state.results
     ->Belt.Option.flatMap(results => {
@@ -162,15 +165,16 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     })
     ->Belt.Option.getWithDefault(React.null);
 
+    let debouncedGetTracks = Debouncer.make(~wait=400, (value) => getTracks(value));
+    
     <div className=Styles.searchContainer>
         <div className=Styles.inputContainer>
             <input
                 className=Styles.input
                 placeholder="Search for tracks"
-                value={state.query} 
-                onChange={event => dispatch(Types.UpdateQuery(ReactEvent.Form.target(event)##value))}
+                onChange={event => debouncedGetTracks(ReactEvent.Form.target(event)##value)}
             />
-            <span className=Styles.searchButtonContainer onClick={_ => getTracks()}>
+            <span className=Styles.searchButtonContainer>
                 <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">
                     <path 
                         id="iconfinder_67_111124" 
