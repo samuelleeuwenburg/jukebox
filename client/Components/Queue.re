@@ -152,7 +152,7 @@ module Track = {
                 </div>
             </div>
             <div className=Styles.addedByColumn>
-                {React.string(user.displayName)}
+                {React.string(track.userId)}
             </div>
             <div className=Styles.voteColumn>
                 <div className=Styles.voteContainer onClick={_ => voteTrack()}>
@@ -174,29 +174,34 @@ module Track = {
 };
 
 [@react.component]
-let make = (~dispatch, ~state: Types.state, ~token: string) => {
-    let tracks = state.queue
-    ->Belt.Option.flatMap(queue => {
-        state.user->Belt.Option.map(user => (queue, user));
+let make = (~dispatch, ~state: Types.state) => {
+    state.queue
+    ->Belt.Option.flatMap(tracks => {
+        state.user->Belt.Option.map(user => (tracks, user));
     })
     ->Belt.Option.map(values => {
         open Bragi;
-        let (queue, user) = values;
-        let tracks = queue.tracks
+        let (tracks, user) = values;
+
+        let trackEls = tracks
         |> List.map(track => {
             <Track key=track.id socket=state.socket track=track user=user />
         })
         |> Array.of_list
         |> React.array;
-        <ul className=Styles.tracksContainer>{tracks}</ul>
+
+        let title = if (List.length(tracks) == 0) {
+            <h2 className=Styles.queueTitle>{React.string("Queue is empty")}</h2>
+        } else {
+            <h2 className=Styles.queueTitle>{React.string("Next in queue")}</h2>
+        };
+
+        <>
+            {title}
+            <ul className=Styles.tracksContainer>{trackEls}</ul>
+        </>
     })
     ->Belt.Option.getWithDefault(
         <p className=Styles.error>{React.string("ERROR: no queue found!")}</p>
     );
-
-
-    <>
-        <h2 className=Styles.queueTitle>{React.string("Next in queue")}</h2>
-        {tracks}
-    </>
 };

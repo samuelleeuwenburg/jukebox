@@ -74,24 +74,25 @@ module Styles = {
     let progression = style([
         backgroundColor(Style.Colors.lightestGray),
         height(px(6)),
-        transition("width", ~duration=100, ~timingFunction=`easeOut)
+        transition("width", ~duration=200, ~timingFunction=`linear)
     ]);
 }
 [@react.component]
-let make = (~dispatch, ~state: Types.state, ~token: string) => {
+let make = (~dispatch, ~state: Types.state) => {
 
     state.currentTrack
     ->Belt.Option.map(currentTrack => {
         let fraction = float_of_int(currentTrack.position) /. float_of_int(currentTrack.track.durationMs);
-        let percentage = floor(fraction *. 100.0);
+        let percentage = fraction *. 100.0;
 
         <div className=Styles.currentTrackContainer>
             <div 
             className=Styles.albumCover
-            style=(ReactDOMRe.Style.make(~backgroundImage="url('"++currentTrack.track.imageUrl++"')", ()))
-            >
+            style=(ReactDOMRe.Style.make(
+                ~backgroundImage="url('"++currentTrack.track.imageUrl++"')", ())
+            )
+        >
             </div>
-
             <div className=Styles.trackContainer>
                 <div className=Styles.currentTrack>
                     {React.string(currentTrack.track.name)}
@@ -103,10 +104,11 @@ let make = (~dispatch, ~state: Types.state, ~token: string) => {
                 <div className=Styles.progressBar>
                     <div 
                         className=Styles.progression 
-                        style=(ReactDOMRe.Style.make(~width=string_of_float(percentage) ++ "%", ()))
+                        style=(ReactDOMRe.Style.make(
+                            ~width=string_of_float(percentage) ++ "%", ())
+                        )
                     ></div>
                 </div>
-
             </div>
         </div>
     })

@@ -34,40 +34,8 @@ module Styles = {
 let make = (~token: string) => {
     let (state, dispatch) = React.useReducer(State.reducer, State.initialState);
 
+    // get Spotify data
     React.useEffect0(() => {
-        IO.socketEmit(state.socket, "getQueue", ());
-        IO.socketOn(state.socket, "newQueue", (json) => {
-            Js.log("newQueue received!");
-            Js.log(json);
-            let queue = json |> Bragi.Decode.queue;
-            let currentTrack = json |> Bragi.Decode.currentTrack;
-            dispatch(Types.UpdateQueue(queue));
-
-            switch (state.currentTrack) {
-            | None => {
-                Spotify.playTrack(
-                    token,
-                    currentTrack.track.uri,
-                    currentTrack.position,
-                ) |> ignore;
-                dispatch(Types.UpdateCurrentTrack(currentTrack))
-            }
-            | Some(current) => {
-                if (current.track.id !== currentTrack.track.id) {
-                    Spotify.playTrack(
-                        token,
-                        currentTrack.track.uri,
-                        0,
-                    ) |> ignore;
-                    dispatch(Types.UpdateCurrentTrack(currentTrack))
-                }
-            }
-            };
-        }) |> ignore;
-
-        Js.Global.setInterval(() => dispatch(Types.Tick), 160)
-        |> ignore;
-
         Js.Promise.(
             Spotify.getPlayer(token)
             |> then_(player => {
@@ -83,18 +51,61 @@ let make = (~token: string) => {
                 resolve(user)
             })
         ) |> ignore;
+
         None;
     });
 
+    // get initial queue
+    React.useEffect0(() => IO.socketEmit(state.socket, "getQueue", ()));
 
+    // Listen for new queue
+    React.useEffect1(() => {
+        let handleNewQueue = json => {
+            Js.log("newQueue received!");
+            Js.log(json);
+            let now = json |> Bragi.Decode.now;
+
+            switch (now.tracks) {
+            | Some(tracks) => dispatch(Types.UpdateQueue(tracks))
+            | None => ()
+            };
+
+            switch ((state.currentTrack, now.currentTrack)) {
+            | (Some(local), Some(server)) => {
+                if (local.track.id !== server.track.id) {
+                    Spotify.playTrack(token, server.track.uri, 0) |> ignore;
+                    dispatch(Types.UpdateCurrentTrack(server));
+                    ()
+                }
+            }
+            | (None, Some(server)) => {
+                Spotify.playTrack(token, server.track.uri, server.position) |> ignore;
+                dispatch(Types.UpdateCurrentTrack(server));
+                ()
+            }
+            | _ => ()
+            };
+        };
+
+        IO.socketOn(state.socket, "newQueue", handleNewQueue);
+        Some(() => IO.socketOff(state.socket, "newQueue", handleNewQueue));
+    }, [|state.currentTrack|]);
+
+    // tick
+    React.useEffect0(() => {
+        let tick = () => dispatch(Types.Tick);
+
+        let intervalId = Js.Global.setInterval(tick, 200);
+        Some(() => Js.Global.clearInterval(intervalId));
+    });
 
     <>
         <div className=Styles.header>
             <Search dispatch=dispatch token=token state=state />
         </div>
         <div className=Styles.appContainer>
-            <Now dispatch=dispatch state=state token=token />
-            <Queue dispatch=dispatch state=state token=token />
+            <Now dispatch=dispatch state=state/>
+            <Queue dispatch=dispatch state=state />
         </div>
         <div className=Styles.logoutContainer>
             <Logout />

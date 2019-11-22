@@ -83,21 +83,12 @@ module Styles = {
 }   
 
 module Track = {
-    type partialTrack = {
-        id: string,
-        name: string,
-        uri: string,
-        userId: string,
-        imageUrl: string,
-        durationMs: int,
-    };
-
     [@react.component]
     let make = (~dispatch, ~track: Spotify.track, ~token: string, ~user: Spotify.user, ~socket: IO.socket) => {
         let artist = List.hd(track.artists);
-
         let image = track.album.images
-        |> List.find((image: Spotify.image) => image.width == 640);
+        |> List.sort((a: Spotify.image, b: Spotify.image) => b.width - a.width)
+        |> List.hd;
 
         let addTrack = React.useCallback0(() => {
             let data = Json.Encode.(object_([

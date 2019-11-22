@@ -12,14 +12,16 @@ type track = {
     timestamp: int,
 };
 
-type queue = {
-    tracks: list(track)
-};
 
 type currentTrack = {
     track: track,
     position: int,
     timestamp: int,
+};
+
+type now = {
+    tracks: option(list(track)),
+    currentTrack: option(currentTrack),
 };
 
 module Decode = {
@@ -35,16 +37,17 @@ module Decode = {
             timestamp: json |> field("timestamp", int),
         };
 
-    let queue = json =>
-        Json.Decode.{
-            tracks: json |> field("tracks", list(track))
-        };
-
     let currentTrack = json =>
         Json.Decode.{
-            track: json |> at(["currentTrack", "track"], track),
-            position: json |> at(["currentTrack", "position"], int),
-            timestamp: json |> at(["currentTrack", "timestamp"], int),
+            track: json |> field("track", track),
+            position: json |> field("position", int),
+            timestamp: json |> field("timestamp", int),
         };
+
+    let now = json =>
+        Json.Decode.{
+            tracks: json |> field("tracks", optional(list(track))),
+            currentTrack: json |> field("currentTrack", optional(currentTrack)),
+        }
 };
 
