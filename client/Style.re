@@ -1,7 +1,7 @@
 module Colors = {
     open Css;
 
-    let error = hex("ff0000");
+    let error = hex("AF2415");
 
     let lightestGray = hex("B3B3B3");
     let lightGray = hex("858585")

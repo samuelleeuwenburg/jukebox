@@ -65,9 +65,11 @@ module Styles = {
         width(pct(100.0)),
         backgroundColor(Style.Colors.gray),
         height(px(6)),
+        marginBottom(px(20)),
         media("(min-width: 640px)", [
             position(absolute),
             bottom(zero),
+            marginBottom(zero)
         ]) 
     ]);
 
@@ -76,7 +78,55 @@ module Styles = {
         height(px(6)),
         transition("width", ~duration=200, ~timingFunction=`linear)
     ]);
-}
+
+    let devicesContainer = style([
+        display(`flex),
+        flexWrap(wrap),
+        flexDirection(row),
+        justifyContent(`flexEnd),
+        order(1),
+        height(px(20)),
+        media("(min-width: 640px", [
+            order(0),
+            marginBottom(zero)
+        ])
+    ]);
+
+    let deviceIcon = player => {
+        style([
+            border(px(1), `solid, 
+                player
+                ->Belt.Option.map(_ => {
+                    Style.Colors.lightGray
+                })
+                ->Belt.Option.getWithDefault(
+                    Style.Colors.error
+                )
+            ),
+            height(px(20)),
+            width(px(20)),
+            position(absolute),
+            right(zero),
+            
+            media("min-width: 640px", [
+                bottom(px(40)),
+            ])
+        ])
+    };
+};
+
+module Controls = {
+    [@react.component]
+    let make = (~state: Types.state) =>{
+
+        <div className=Styles.devicesContainer>
+            <div className=Styles.deviceIcon(state.player)>
+            </div>
+        </div>
+
+    }
+};
+
 [@react.component]
 let make = (~dispatch, ~state: Types.state) => {
 
@@ -87,11 +137,11 @@ let make = (~dispatch, ~state: Types.state) => {
 
         <div className=Styles.currentTrackContainer>
             <div 
-            className=Styles.albumCover
-            style=(ReactDOMRe.Style.make(
-                ~backgroundImage="url('"++currentTrack.track.imageUrl++"')", ())
-            )
-        >
+                className=Styles.albumCover
+                style=(ReactDOMRe.Style.make(
+                    ~backgroundImage="url('"++currentTrack.track.imageUrl++"')", ())
+                )
+            >
             </div>
             <div className=Styles.trackContainer>
                 <div className=Styles.currentTrack>
@@ -101,6 +151,7 @@ let make = (~dispatch, ~state: Types.state) => {
                     {React.string(currentTrack.track.artist)}
                 </div>
 
+                <Controls state=state />
                 <div className=Styles.progressBar>
                     <div 
                         className=Styles.progression 

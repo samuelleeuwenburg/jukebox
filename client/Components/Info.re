@@ -20,19 +20,10 @@ let make = (~state: Types.state) => {
             <div className=Styles.error>{React.string("ERROR: no user found!")}</div>
         );
 
-    let player = state.player
-        ->Belt.Option.map(player => {
-            <div>
-                <strong>{React.string("device: ")}</strong>
-                {React.string(player.device.name)}
-            </div>
-        })
-        ->Belt.Option.getWithDefault(
-            <div className=Styles.error>{React.string("WARNING: no device found!")}</div>
-        );
+
 
     <>
         {user}
-        {player}
+
     </>
 };

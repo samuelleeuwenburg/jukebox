@@ -6,10 +6,10 @@ module Styles = {
         fontWeight(bold),
     ]);
     let tracksContainer = style([
-        height(`calc(`sub, vh(100.0), px(440))),
+        height(`calc(`sub, vh(100.0), px(450))),
         overflowX(auto),
         media("(min-width: 640px)", [
-            height(`calc(`sub, vh(100.0), px(465))),
+            height(`calc(`sub, vh(100.0), px(440))),
         ])
     ]);
 
