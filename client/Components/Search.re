@@ -1,3 +1,5 @@
+open Debouncer;
+
 module Styles = {
     open Css;
 
@@ -127,16 +129,19 @@ module Track = {
 
 [@react.component]
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
-    let getTracks = React.useCallback1(() => {
+    let (query, setQuery) = React.useState(() => "");
+
+    let getTracks(query) = {
+        Js.log2(query, "get tracks query")
         Js.Promise.(
-            Spotify.getTracks(token, state.query)
+            Spotify.getTracks(token, query)
             |> then_(tracks => {
                 dispatch(Types.UpdateResults(tracks));
                 resolve(tracks)
             })
         ) |> ignore;
-    }, [|state.query|]);
-
+    };
+    
     let results = state.results
     ->Belt.Option.flatMap(results => {
         state.user->Belt.Option.map(user => (results, user));
@@ -162,15 +167,22 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     })
     ->Belt.Option.getWithDefault(React.null);
 
+    let debouncedGetTracks = React.useRef(Debouncer.make(~wait=1000, (query) => getTracks(query)));
+
+    let onChanges(value) =  {
+        dispatch(Types.UpdateQuery(value));
+        React.Ref.current(debouncedGetTracks, value);
+    };
+
     <div className=Styles.searchContainer>
         <div className=Styles.inputContainer>
             <input
                 className=Styles.input
                 placeholder="Search for tracks"
-                value={state.query} 
-                onChange={event => dispatch(Types.UpdateQuery(ReactEvent.Form.target(event)##value))}
+                value={state.query}
+                onChange={event => onChanges(ReactEvent.Form.target(event)##value)}
             />
-            <span className=Styles.searchButtonContainer onClick={_ => getTracks()}>
+            <span className=Styles.searchButtonContainer>
                 <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">
                     <path 
                         id="iconfinder_67_111124" 
