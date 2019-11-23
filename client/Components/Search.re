@@ -11,6 +11,7 @@ module Styles = {
     ]);
 
     let input = style([
+        paddingLeft(px(25))
     ]);
 
     let trackName = style([
@@ -57,8 +58,8 @@ module Styles = {
 
     let searchButtonContainer = style([
         position(absolute),
-        right(zero),
-        top(zero),
+        left(zero),
+        bottom(zero),
         cursor(`pointer)
     ]);
 
