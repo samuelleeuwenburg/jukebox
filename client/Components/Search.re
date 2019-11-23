@@ -56,11 +56,14 @@ module Styles = {
         marginRight(px(20))
     ]);
 
-    let searchButtonContainer = style([
+    let searchButtonContainer = (query) => style([
         position(absolute),
         left(zero),
         bottom(zero),
-        cursor(`pointer)
+        cursor(`pointer),
+        selector("& svg path", [
+            SVG.fill(query === "" ? Style.Colors.lightGray : Style.Colors.lightestGray)
+        ])
     ]);
 
     let resultsContainer = style([
@@ -80,7 +83,17 @@ module Styles = {
             transform(translateX(px(-40))),
             left(initial)
         ])
-    ])
+    ]);
+
+    let clearIconContainer = (hasValue) => {
+        Js.log2(hasValue, "hasvalue");
+        style([
+        position(absolute),
+        right(zero),
+        bottom(zero),
+        hasValue === "" ?  display(none) : display(inline),
+        cursor(`pointer)
+    ])};
 }   
 
 module Track = {
@@ -179,7 +192,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
 
     <div className=Styles.searchContainer>
         <div className=Styles.inputContainer>
-            <span className=Styles.searchButtonContainer>
+            <span className=Styles.searchButtonContainer(state.query)>
                 <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">
                     <path 
                         id="iconfinder_67_111124" 
@@ -196,6 +209,14 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 value={state.query}
                 onChange={event => onChanges(ReactEvent.Form.target(event)##value)}
             />
+            <span className=Styles.clearIconContainer(state.query) onClick={_ => dispatch(Types.ClearSearch)}>
+                <svg width="13.414" height="13.414" viewBox="0 0 13.414 13.414">
+                    <g id="Group_2" transform="translate(-1180.703 -25.116)">
+                        <line id="Line_31" x2="12" y2="12" transform="translate(1181.41 25.823)" fill="none" stroke="#b3b3b3" strokeWidth="1"/>
+                        <line id="Line_32"  y1="12" x2="12" transform="translate(1181.41 25.823)" fill="none" stroke="#b3b3b3" strokeWidth="1"/>
+                    </g>
+                </svg>
+            </span>
         </div>
         {results}
     </div>
