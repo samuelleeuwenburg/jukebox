@@ -148,7 +148,7 @@ module Track = {
                     {React.string(track.name)}
                 </div>
                 <div className=Styles.column>
-                    {React.string(track.name)}
+                    {React.string(track.artist)}
                 </div>
             </div>
             <div className=Styles.addedByColumn>

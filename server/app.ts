@@ -12,6 +12,7 @@ app.use(cors())
 interface Track {
     id: string;
     name: string;
+    artist: string;
     uri: string;
     userId: string;
     imageUrl: string;

@@ -4,6 +4,7 @@ let baseApiUrl = baseUrl ++ "/api";
 type track = {
     id: string,
     name: string,
+    artist: string,
     uri: string,
     userId: string,
     imageUrl: string,
@@ -29,6 +30,7 @@ module Decode = {
         Json.Decode.{
             id: json |> field("id", string),
             name: json |> field("name", string),
+            artist: json |> field("artist", string),
             uri: json |> field("uri", string),
             userId: json |> field("userId", string),
             durationMs: json |> field("durationMs", int),

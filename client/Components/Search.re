@@ -88,7 +88,6 @@ module Styles = {
     ]);
 
     let clearIconContainer = (hasValue) => {
-        Js.log2(hasValue, "hasvalue");
         style([
         position(absolute),
         right(zero),
@@ -110,6 +109,7 @@ module Track = {
             let data = Json.Encode.(object_([
                 ("id", string(track.id)),
                 ("name", string(track.name)),
+                ("artist", string(artist.name)),
                 ("uri", string(track.uri)),
                 ("userId", string(user.id)),
                 ("imageUrl", string(image.url)),

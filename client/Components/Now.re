@@ -98,7 +98,7 @@ let make = (~dispatch, ~state: Types.state) => {
                     {React.string(currentTrack.track.name)}
                 </div>
                 <div className=Styles.currentArtist>
-                    {React.string(currentTrack.track.name)}
+                    {React.string(currentTrack.track.artist)}
                 </div>
 
                 <div className=Styles.progressBar>
