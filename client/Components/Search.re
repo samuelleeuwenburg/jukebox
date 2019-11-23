@@ -167,10 +167,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     })
     ->Belt.Option.getWithDefault(React.null);
 
-    // let debouncedGetTracks = Debouncer.make(~wait=1000, (query) => getTracks(query));
-    let debouncedGetTracks = React.useRef(Debouncer.make(~wait=1000, (query) => {
-        getTracks(query)
-    }));
+    let debouncedGetTracks = React.useRef(Debouncer.make(~wait=1000, (query) => getTracks(query)));
 
     let onChanges(value) =  {
         dispatch(Types.UpdateQuery(value));
