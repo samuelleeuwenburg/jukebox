@@ -1,5 +1,3 @@
-open Debouncer;
-
 module Styles = {
     open Css;
 
@@ -129,7 +127,6 @@ module Track = {
 
 [@react.component]
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
-    let (query, setQuery) = React.useState(() => "");
 
     let getTracks(query) = {
         Js.log2(query, "get tracks query")
@@ -166,22 +163,21 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         <ul className=Styles.resultsContainer>{tracks}</ul>
     })
     ->Belt.Option.getWithDefault(React.null);
-
-    let debouncedGetTracks = React.useRef(Debouncer.make(~wait=1000, (query) => getTracks(query)));
+    
+    let debouncedGetTracks = React.useRef(Debouncer.make(~wait=500, (query) => getTracks(query)));
 
     let onChanges(value) =  {
-        dispatch(Types.UpdateQuery(value));
-        React.Ref.current(debouncedGetTracks, value);
+        if (value === "") {
+            dispatch(Types.ClearSearch)
+        } else {
+            dispatch(Types.UpdateQuery(value))
+            React.Ref.current(debouncedGetTracks, value)
+        }
+        |> ignore;
     };
 
     <div className=Styles.searchContainer>
         <div className=Styles.inputContainer>
-            <input
-                className=Styles.input
-                placeholder="Search for tracks"
-                value={state.query}
-                onChange={event => onChanges(ReactEvent.Form.target(event)##value)}
-            />
             <span className=Styles.searchButtonContainer>
                 <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">
                     <path 
@@ -193,6 +189,12 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                     />
                 </svg>
             </span>
+            <input
+                className=Styles.input
+                placeholder="Search for tracks"
+                value={state.query}
+                onChange={event => onChanges(ReactEvent.Form.target(event)##value)}
+            />
         </div>
         {results}
     </div>
