@@ -4,6 +4,7 @@ module Styles = {
     let searchContainer = style([
         maxWidth(px(500)),
         flexBasis(pct(100.0)),
+
     ]);
 
     let inputContainer = style([
@@ -11,7 +12,8 @@ module Styles = {
     ]);
 
     let input = style([
-        paddingLeft(px(25))
+        paddingLeft(px(25)),
+        paddingRight(px(25))
     ]);
 
     let trackName = style([
