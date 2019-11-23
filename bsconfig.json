@@ -1,10 +1,10 @@
 {
-  "name": "reason-react-examples",
+  "name": "Bragi",
   "reason": {
     "react-jsx": 3,
   },
   "sources": {
-    "dir" : "client",
+    "dir" : "src",
     "subdirs" : true
   },
   "bsc-flags": ["-bs-super-errors", "-bs-no-version-header"],
@@ -20,6 +20,7 @@
     "bs-fetch",
     "bs-webapi",
     "bs-css",
+    "bs-express",
     "@glennsl/bs-json"
   ],
   "refmt": 3

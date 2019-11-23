@@ -1,5 +1,5 @@
-build
-jukebox.db
+public/client.js
+
 .DS_Store
 *.bs.js
 .merlin
@@ -7,4 +7,3 @@ jukebox.db
 npm-debug.log
 /lib/bs/
 /node_modules/
-/bundleOutput/
