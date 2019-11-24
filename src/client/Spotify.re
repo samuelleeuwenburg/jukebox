@@ -1,7 +1,7 @@
 let baseUrl = "https://api.spotify.com/v1";
 let clientId = "4f8a771ca0aa41b28424ad9fc737dacc";
 let scopes = "user-modify-playback-state user-read-playback-state user-read-private user-read-email";
-let redirectUrl = "http://127.0.0.1:8000";
+let redirectUrl = "http://127.0.0.1:3000";
 
 let authenticate = () => {
     open Utils;
