@@ -1,3 +1,5 @@
+open Webapi.Dom;
+
 module Styles = {
     open Css;
 
@@ -95,6 +97,24 @@ module Styles = {
         hasValue === "" ?  display(none) : display(inline),
         cursor(`pointer)
     ])};
+
+    let recentSearchQuery = style([
+        fontSize(px(20)),
+        fontWeight(bold),
+        paddingTop(px(5)),
+        paddingBottom(px(5)),
+        cursor(`pointer),
+        selector("&:hover", [
+            backgroundColor(Style.Colors.darkGray)
+        ])
+    ]);
+
+    let recentSearchesTitle = style([
+        fontSize(px(20)),
+        fontWeight(bold),
+        color(Style.Colors.lightGray),
+        marginBottom(px(5))
+    ]);
 }   
 
 module Track = {
@@ -144,10 +164,12 @@ module Track = {
 [@react.component]
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
     let (showSearches, setShowSearches) = React.useState(() => false)
+    let searchContainerRef = React.useRef(Js.Nullable.null);
 
     let getTracks(query) = {
         Js.log2(query, "get tracks query")
-        
+
+        setShowSearches(_ => false);
         Localstorage.setQueryToStorage(query);
         Js.Promise.(
             Spotify.getTracks(token, query)
@@ -159,9 +181,16 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     };
 
     let recentSearches = {
+        let onQueryClick = (query: string) => {
+            setShowSearches(_ => false)
+            dispatch(Types.UpdateQuery(query));
+            getTracks(query);
+        }
+        
+
         let queries = Localstorage.getRecentSearchesFromStorage()
         |> List.map(query => {
-            <div onClick={_ => dispatch(Types.UpdateQuery(query))}>
+            <div className=Styles.recentSearchQuery key={query} onClick={_ => onQueryClick(query)}>
                 {React.string(query)}
             </div>
         })
@@ -169,11 +198,10 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         |> React.array;
 
         <div className=Styles.resultsContainer>
-            <div>{React.string("Recent searches")}</div> 
+            <div className=Styles.recentSearchesTitle>{React.string("Recent searches")}</div> 
             {queries}
         </div>
     }   
-
 
     let results = state.results
     ->Belt.Option.flatMap(results => {
@@ -198,7 +226,6 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         |> React.array;
 
         <ul className=Styles.resultsContainer>
-            
             {tracks}
         </ul>
     })
@@ -206,7 +233,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     
     let debouncedGetTracks = React.useRef(Debouncer.make(~wait=500, (query) => getTracks(query)));
 
-    let onChanges(value) =  {
+    let onChanges(value: string) =  {
         setShowSearches(_ => false)
 
         if (value === "") {
@@ -222,11 +249,40 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         setShowSearches(_ => true);
     };
 
-    let onBlur = () => {
-        setShowSearches(_ => false)
+    let closeRecentSearches = () => {
+        setShowSearches(_ => false);
     };
 
-    <div className=Styles.searchContainer>
+    let handleClickoutside = (domElement: Dom.element, target: Dom.mouseEvent, fn) => {
+        let targetElement = MouseEvent.target(target) |> EventTarget.unsafeAsElement;
+        domElement |> Element.contains(targetElement) ? () : fn();
+    }
+
+    let handleMouseDown = (event) => {
+        searchContainerRef
+        ->React.Ref.current
+        ->Js.Nullable.toOption
+        ->Belt.Option.map(refValue => 
+            handleClickoutside(refValue, event, closeRecentSearches)
+        )
+    }
+    ->ignore;
+
+    React.useEffect0(() => {
+        Document.addClickEventListener(handleMouseDown, document);
+        Some(
+            () => Document.removeClickEventListener(handleMouseDown, document)
+        );
+    });
+
+    let renderRecentSearches = {
+        switch (showSearches) {
+            | (true) => {recentSearches}
+            | (false) => React.null
+        };
+    };
+
+    <div className=Styles.searchContainer ref={ReactDOMRe.Ref.domRef(searchContainerRef)}>
         <div className=Styles.inputContainer>
             <span className=Styles.searchButtonContainer(state.query)>
                 <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">
@@ -241,7 +297,6 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
             </span>
             <input
                 onFocus={_ => onFocus() }
-                onBlur={_ => onBlur() }
                 className=Styles.input
                 placeholder="Search for tracks"
                 value={state.query}
@@ -256,7 +311,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 </svg>
             </span>
         </div>
-        {recentSearches}
+        {renderRecentSearches}
         {results}
     </div>
 };
