@@ -33,8 +33,10 @@ module State = {
     };
 
     type action = 
+        | PlayTrack(Bragi.track)
         | AddTrack(Bragi.track)
         | RemoveTrack(string)
+        | VoteOnTrack(string, string)
         | Tick;
 
     type updateFn = (state, action) => state;
@@ -52,11 +54,12 @@ module State = {
         (get, set);
     };
 
+
     let sortQueue = (tracks: list(Bragi.track)) => {
         List.(
             tracks |> sort((a: Bragi.track, b: Bragi.track) => {
                 if (a.upvotes->length == b.upvotes->length) {
-                    a.timestamp - b.timestamp;
+                    (a.timestamp -. b.timestamp) |> int_of_float;
                 } else {
                     b.upvotes->length - a.upvotes->length;
                 };
@@ -66,21 +69,67 @@ module State = {
 
     let update = (state: state, action: action) => {
         switch (action) {
+        | Tick => {
+            switch (state.currentTrack) {
+            | Some(currentTrack) => {
+                let now = Js.Date.now();
+                let songEndsAt = currentTrack.timestamp +.
+                    float_of_int(currentTrack.track.durationMs);
+
+                if (now > songEndsAt) {
+                    { ...state, currentTrack: None };
+                } else {
+                    {
+                        ...state,
+                        currentTrack: Some({
+                            ...currentTrack,
+                            position: now -. currentTrack.timestamp
+                        })
+                    };
+                };
+            }
+            | None => state
+            };
+        }
+        | PlayTrack(track) => {
+            {
+                ...state,
+                currentTrack: Some({
+                    track,
+                    timestamp: Js.Date.now(),
+                    position: 0.0,
+                })
+            };
+        }
         | AddTrack(track) => {
             {
                 ...state,
-                tracks: [track, ...state.tracks]->sortQueue
+                tracks: [track, ...state.tracks] |> sortQueue
             }
         }
         | RemoveTrack(trackId) => {
             {
                 ...state,
                 tracks: state.tracks 
-                |> List.filter((track: Bragi.track) => track.id == trackId)
-            }
+                |> List.filter((track: Bragi.track) => track.id != trackId)
+            };
+        }
+        | VoteOnTrack(trackId, userId) => {
+            {
+                ...state,
+                tracks: state.tracks
+                    |> List.map((track: Bragi.track) => {
+                        if (track.id == trackId &&
+                            track.upvotes->Belt.List.has(userId, (==))) {
+                            {...track, upvotes: [userId, ...track.upvotes]}
+                        } else {
+                            track;
+                        };
+                    })
+            };
         }
         };
-    }
+    };
 
     let initialState = { tracks: [], currentTrack: None };
 };
@@ -98,9 +147,22 @@ IO.on(io, "connect", (socket) => {
 
     IO.Socket.on(socket, "addTrack", json => {
         let track = json |> Bragi.Decode.track;
+        let track = {
+            ...track,
+            timestamp: Js.Date.now(),
+            upvotes: [track.userId]
+        };
         dispatch(AddTrack(track));
-        Js.log2("adding track ->", track);
-        ();
+
+        let state = getState();
+
+        let json = Json.Encode.(object_([
+            ("tracks", state.tracks |> list(Bragi.Encode.track)),
+            ("currentTrack", nullable(Bragi.Encode.currentTrack, state.currentTrack))
+        ]));
+
+        Js.log2("adding track ->", track |> Bragi.Encode.track);
+        IO.Socket.emit(socket, "newQueue", json);
     });
 
     IO.Socket.on(socket, "getQueue", _ => {
@@ -123,5 +185,35 @@ Express.App.useOnPath(app, ~path="/") @@ {
 };
 
 Http.listen(http, 3000, () => {
+    Js.Global.setInterval(() => {
+        dispatch(Tick) |> ignore;
+    }, 500);
+
+    Js.Global.setInterval(() => {
+        let state = getState();
+
+        switch (state.currentTrack) {
+        | None => {
+            if (List.length(state.tracks) != 0) {
+                let track = List.hd(state.tracks)
+                dispatch(RemoveTrack(track.id));
+                dispatch(PlayTrack(track));
+
+                let state = getState();
+                let json = Json.Encode.(object_([
+                    ("tracks", state.tracks |> list(Bragi.Encode.track)),
+                    ("currentTrack", nullable(Bragi.Encode.currentTrack, state.currentTrack))
+                ]));
+
+                Js.log2("NOW PLAYING ->", track |> Bragi.Encode.track)
+                IO.emit(io, "newQueue", json);
+            } else {
+                Js.log("no tracks in queue, waiting...")
+            }
+        }
+        | _ => ()
+        }
+    }, 2000);
+
     Js.log("jukeboxing on port 3000!");
 });

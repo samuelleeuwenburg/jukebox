@@ -10,13 +10,13 @@ type track = {
     imageUrl: string,
     durationMs: int,
     upvotes: list(string), 
-    timestamp: int,
+    timestamp: float,
 };
 
 type currentTrack = {
     track: track,
-    position: int,
-    timestamp: int,
+    position: float,
+    timestamp: float,
 };
 
 type now = {
@@ -35,7 +35,7 @@ module Encode = {
                 ("durationMs", int(track.durationMs)),
                 ("imageUrl", string(track.imageUrl)),
                 ("upvotes", track.upvotes |> list(string)),
-                ("timestamp", int(track.timestamp)),
+                ("timestamp", float(track.timestamp)),
             ])
         );
 
@@ -43,8 +43,8 @@ module Encode = {
         Json.Encode.(
             object_([
                 ("track", track(currentTrack.track)),
-                ("position", int(currentTrack.position)),
-                ("timestamp", int(currentTrack.timestamp)),
+                ("position", float(currentTrack.position)),
+                ("timestamp", float(currentTrack.timestamp)),
             ])
         );
 }
@@ -60,14 +60,14 @@ module Decode = {
             durationMs: json |> field("durationMs", int),
             imageUrl: json |> field("imageUrl", string),
             upvotes: json |> withDefault([], field("upvotes", list(string))),
-            timestamp: json |> withDefault(0, field("timestamp", int))
+            timestamp: json |> withDefault(0.0, field("timestamp", float))
         };
 
     let currentTrack = json =>
         Json.Decode.{
             track: json |> field("track", track),
-            position: json |> field("position", int),
-            timestamp: json |> field("timestamp", int),
+            position: json |> field("position", float),
+            timestamp: json |> field("timestamp", float),
         };
 
     let now = json =>

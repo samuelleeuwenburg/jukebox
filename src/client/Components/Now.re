@@ -132,7 +132,7 @@ let make = (~dispatch, ~state: Types.state) => {
 
     state.currentTrack
     ->Belt.Option.map(currentTrack => {
-        let fraction = float_of_int(currentTrack.position) /. float_of_int(currentTrack.track.durationMs);
+        let fraction = currentTrack.position /. float_of_int(currentTrack.track.durationMs);
         let percentage = fraction *. 100.0;
 
         <div className=Styles.currentTrackContainer>

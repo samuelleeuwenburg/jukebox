@@ -20,15 +20,15 @@ let reducer = (state: Types.state, action: Types.action) => {
             ...state,
             currentTrack: Some({
                 ...currentTrack,
-                timestamp: int_of_float(Js.Date.now()) - currentTrack.position,
+                timestamp: Js.Date.now() -. currentTrack.position,
             })
         }
     }
     | Types.Tick => {
         state.currentTrack
         ->Belt.Option.map(currentTrack => {
-            let position = int_of_float(Js.Date.now()) - currentTrack.timestamp;
-            if (position > currentTrack.track.durationMs) {
+            let position = Js.Date.now() -. currentTrack.timestamp;
+            if (position > float_of_int(currentTrack.track.durationMs)) {
                 {...state, currentTrack: None }
             } else {
                 {...state, currentTrack: Some({ ...currentTrack, position })}

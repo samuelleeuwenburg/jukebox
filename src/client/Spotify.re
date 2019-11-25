@@ -170,14 +170,14 @@ let getPlayer = (token: string) => {
 };
 
 
-let playTrack = (token: string, songUri: string, positionMs: int) => {
+let playTrack = (token: string, songUri: string, positionMs: float) => {
     let url = baseUrl ++ "/me/player/play";
     let payload = Js.Dict.empty();
 
     Js.Dict.set(payload, "uris", Js.Json.array([|Js.Json.string(songUri)|]));
 
-    if (positionMs !== 0) {
-        Js.Dict.set(payload, "position_ms", Js.Json.number(positionMs |> float_of_int));
+    if (positionMs != 0.0) {
+        Js.Dict.set(payload, "position_ms", Js.Json.number(positionMs));
     }
 
     Js.Promise.(
