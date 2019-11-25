@@ -143,9 +143,12 @@ module Track = {
 
 [@react.component]
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
+    let (showSearches, setShowSearches) = React.useState(() => false)
 
     let getTracks(query) = {
         Js.log2(query, "get tracks query")
+        
+        Localstorage.setQueryToStorage(query);
         Js.Promise.(
             Spotify.getTracks(token, query)
             |> then_(tracks => {
@@ -154,7 +157,24 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
             })
         ) |> ignore;
     };
-    
+
+    let recentSearches = {
+        let queries = Localstorage.getRecentSearchesFromStorage()
+        |> List.map(query => {
+            <div onClick={_ => dispatch(Types.UpdateQuery(query))}>
+                {React.string(query)}
+            </div>
+        })
+        |> Array.of_list
+        |> React.array;
+
+        <div className=Styles.resultsContainer>
+            <div>{React.string("Recent searches")}</div> 
+            {queries}
+        </div>
+    }   
+
+
     let results = state.results
     ->Belt.Option.flatMap(results => {
         state.user->Belt.Option.map(user => (results, user));
@@ -162,6 +182,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     ->Belt.Option.map(values => {
         open Spotify;
         let (results, user) = values;
+
         let tracks = results.items
         |> List.map(track => {
             <Track
@@ -176,13 +197,18 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         |> Array.of_list
         |> React.array;
 
-        <ul className=Styles.resultsContainer>{tracks}</ul>
+        <ul className=Styles.resultsContainer>
+            
+            {tracks}
+        </ul>
     })
     ->Belt.Option.getWithDefault(React.null);
     
     let debouncedGetTracks = React.useRef(Debouncer.make(~wait=500, (query) => getTracks(query)));
 
     let onChanges(value) =  {
+        setShowSearches(_ => false)
+
         if (value === "") {
             dispatch(Types.ClearSearch)
         } else {
@@ -190,6 +216,14 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
             React.Ref.current(debouncedGetTracks, value)
         }
         |> ignore;
+    };
+
+    let onFocus = () => {
+        setShowSearches(_ => true);
+    };
+
+    let onBlur = () => {
+        setShowSearches(_ => false)
     };
 
     <div className=Styles.searchContainer>
@@ -206,6 +240,8 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 </svg>
             </span>
             <input
+                onFocus={_ => onFocus() }
+                onBlur={_ => onBlur() }
                 className=Styles.input
                 placeholder="Search for tracks"
                 value={state.query}
@@ -220,6 +256,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 </svg>
             </span>
         </div>
+        {recentSearches}
         {results}
     </div>
 };
