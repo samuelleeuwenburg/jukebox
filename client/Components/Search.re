@@ -167,7 +167,7 @@ module Track = {
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
     let (showSearches, setShowSearches) = React.useState(() => false)
     let searchContainerRef = React.useRef(Js.Nullable.null);
-
+    
     let getTracks(query) = {
         Js.log2(query, "get tracks query")
 
@@ -225,11 +225,19 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     ->ignore;
 
     React.useEffect1(() => {
-        Document.addClickEventListener(handleMouseDown, document);
+        if (showSearches) {
+            Document.addClickEventListener(handleMouseDown, document);
+        } else {
+            Document.removeClickEventListener(handleMouseDown, document);
+        }
         Some(
-            () => Document.removeClickEventListener(handleMouseDown, document)
+            () => {
+                if (showSearches) {
+                    Document.removeClickEventListener(handleMouseDown, document)
+                }
+            }
         );
-    }, [||]);
+    }, [|showSearches|]);
 
     let recentSearches = {
         let onQueryClick = (query: string) => {
@@ -246,10 +254,10 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         |> Array.of_list
         |> React.array;
 
-        <>
+        <div className=Styles.resultsContainer>
             <div className=Styles.recentSearchesTitle>{React.string("Recent searches")}</div> 
             {queries}
-        </>
+        </div>
     }   
 
     let results = state.results
@@ -260,7 +268,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         open Spotify;
         let (results, user) = values;
 
-        results.items
+        let results = results.items
         |> List.map(track => {
             <Track
                 key=track.uri
@@ -273,15 +281,10 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         })
         |> Array.of_list
         |> React.array;
+
+        <ul className=Styles.resultsContainer>{results}</ul>
     })
     ->Belt.Option.getWithDefault(React.null);
-
-    let renderRecentSearches = {
-        switch (String.length(state.query) >= 1) {
-            | (true) =>  {results}
-            | (false) => {recentSearches}
-        };
-    };
 
     <div className=Styles.searchContainer ref={ReactDOMRe.Ref.domRef(searchContainerRef)}>
         <div className=Styles.inputContainer>
@@ -312,12 +315,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 </svg>
             </span>
         </div>
-        {showSearches ?
-            <div className=Styles.resultsContainer>
-                {renderRecentSearches}
-            </div> :
-            React.null
-        }
-
+        {showSearches ? recentSearches : React.null}
+        {showSearches ? results : React.null}
     </div>
 };
