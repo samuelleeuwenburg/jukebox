@@ -81,11 +81,13 @@ module Styles = {
         overflow(auto),
         left(px(20)),
         maxHeight(`calc(`sub, vh(100.0), px(60))),
+        height(vh(100.0)),
         media("(min-width: 640px)", [
             padding2(px(20), px(40)),
             width(px(580)),
             transform(translateX(px(-40))),
-            left(initial)
+            left(initial),
+            height(initial)
         ])
     ]);
 
@@ -169,7 +171,6 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     let getTracks(query) = {
         Js.log2(query, "get tracks query")
 
-        setShowSearches(_ => false);
         Localstorage.setQueryToStorage(query);
         Js.Promise.(
             Spotify.getTracks(token, query)
@@ -180,62 +181,9 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         ) |> ignore;
     };
 
-    let recentSearches = {
-        let onQueryClick = (query: string) => {
-            setShowSearches(_ => false)
-            dispatch(Types.UpdateQuery(query));
-            getTracks(query);
-        }
-        
-
-        let queries = Localstorage.getRecentSearchesFromStorage()
-        |> List.map(query => {
-            <div className=Styles.recentSearchQuery key={query} onClick={_ => onQueryClick(query)}>
-                {React.string(query)}
-            </div>
-        })
-        |> Array.of_list
-        |> React.array;
-
-        <div className=Styles.resultsContainer>
-            <div className=Styles.recentSearchesTitle>{React.string("Recent searches")}</div> 
-            {queries}
-        </div>
-    }   
-
-    let results = state.results
-    ->Belt.Option.flatMap(results => {
-        state.user->Belt.Option.map(user => (results, user));
-    })
-    ->Belt.Option.map(values => {
-        open Spotify;
-        let (results, user) = values;
-
-        let tracks = results.items
-        |> List.map(track => {
-            <Track
-                key=track.uri
-                socket=state.socket
-                token=token
-                track=track
-                user=user
-                dispatch=dispatch
-            />
-        })
-        |> Array.of_list
-        |> React.array;
-
-        <ul className=Styles.resultsContainer>
-            {tracks}
-        </ul>
-    })
-    ->Belt.Option.getWithDefault(React.null);
-    
     let debouncedGetTracks = React.useRef(Debouncer.make(~wait=500, (query) => getTracks(query)));
 
     let onChanges(value: string) =  {
-        setShowSearches(_ => false)
-
         if (value === "") {
             dispatch(Types.ClearSearch)
         } else {
@@ -253,9 +201,17 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         setShowSearches(_ => false);
     };
 
+    let closeSearch = () => {
+        dispatch(Types.ClearSearch);
+        closeRecentSearches();
+    };
+
     let handleClickoutside = (domElement: Dom.element, target: Dom.mouseEvent, fn) => {
         let targetElement = MouseEvent.target(target) |> EventTarget.unsafeAsElement;
-        domElement |> Element.contains(targetElement) ? () : fn();
+        Js.log("clickoutside")
+        let elementContainsTarget = domElement |> Element.contains(targetElement);
+        Js.log2(elementContainsTarget, "contains")
+        elementContainsTarget ? () : fn();
     }
 
     let handleMouseDown = (event) => {
@@ -268,17 +224,62 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     }
     ->ignore;
 
-    React.useEffect0(() => {
+    React.useEffect1(() => {
         Document.addClickEventListener(handleMouseDown, document);
         Some(
             () => Document.removeClickEventListener(handleMouseDown, document)
         );
-    });
+    }, [||]);
+
+    let recentSearches = {
+        let onQueryClick = (query: string) => {
+            dispatch(Types.UpdateQuery(query));
+            getTracks(query);
+        }
+
+        let queries = Localstorage.getRecentSearchesFromStorage()
+        |> List.map(query => {
+            <div className=Styles.recentSearchQuery key={query} onClick={_ => onQueryClick(query)}>
+                {React.string(query)}
+            </div>
+        })
+        |> Array.of_list
+        |> React.array;
+
+        <>
+            <div className=Styles.recentSearchesTitle>{React.string("Recent searches")}</div> 
+            {queries}
+        </>
+    }   
+
+    let results = state.results
+    ->Belt.Option.flatMap(results => {
+        state.user->Belt.Option.map(user => (results, user));
+    })
+    ->Belt.Option.map(values => {
+        open Spotify;
+        let (results, user) = values;
+
+        results.items
+        |> List.map(track => {
+            <Track
+                key=track.uri
+                socket=state.socket
+                token=token
+                track=track
+                user=user
+                dispatch=dispatch
+            />
+        })
+        |> Array.of_list
+        |> React.array;
+    })
+    ->Belt.Option.getWithDefault(React.null);
 
     let renderRecentSearches = {
-        switch (showSearches) {
-            | (true) => {recentSearches}
-            | (false) => React.null
+        switch (String.length(state.query) >= 1) {
+            | (true) =>  {results}
+            | (false) => {recentSearches}
         };
     };
 
@@ -302,7 +303,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 value={state.query}
                 onChange={event => onChanges(ReactEvent.Form.target(event)##value)}
             />
-            <span className=Styles.clearIconContainer(state.query) onClick={_ => dispatch(Types.ClearSearch)}>
+            <span className=Styles.clearIconContainer(state.query) onClick={_ => closeSearch()}>
                 <svg width="13.414" height="13.414" viewBox="0 0 13.414 13.414">
                     <g id="Group_2" transform="translate(-1180.703 -25.116)">
                         <line id="Line_31" x2="12" y2="12" transform="translate(1181.41 25.823)" fill="none" stroke="#b3b3b3" strokeWidth="1"/>
@@ -311,7 +312,12 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 </svg>
             </span>
         </div>
-        {renderRecentSearches}
-        {results}
+        {showSearches ?
+            <div className=Styles.resultsContainer>
+                {renderRecentSearches}
+            </div> :
+            React.null
+        }
+
     </div>
 };
