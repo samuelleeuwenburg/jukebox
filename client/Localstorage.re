@@ -14,7 +14,12 @@ let setQueryToStorage = (query: string) => {
     let recentQueriesArray = Array.of_list(filteredList);
     let concatenatedQueries = Array.append(searchQueryArray, recentQueriesArray);
 
-    switch (Js.Json.stringifyAny( concatenatedQueries)) {
+    let slicedArray = switch (Array.length(concatenatedQueries) > 10) {
+    | true => Belt.(Array.slice(concatenatedQueries, ~offset=0, ~len=10));
+    | false => concatenatedQueries;
+    };
+
+    switch (Js.Json.stringifyAny(slicedArray)) {
         | Some(stringifiedQueriesArray) => Dom.Storage.(localStorage |> setItem("recent-searches", stringifiedQueriesArray))
         | None => ()
     };
