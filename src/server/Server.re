@@ -120,7 +120,7 @@ module State = {
                 tracks: state.tracks
                     |> List.map((track: Bragi.track) => {
                         if (track.id == trackId &&
-                            track.upvotes->Belt.List.has(userId, (==))) {
+                            track.upvotes->Belt.List.has(userId, (!=))) {
                             {...track, upvotes: [userId, ...track.upvotes]}
                         } else {
                             track;
@@ -142,7 +142,20 @@ let io = IO.io(http, Json.Encode.object_([("path", Json.Encode.string("/socket.i
 IO.on(io, "connect", (socket) => {
     Js.log("connection received");
     IO.Socket.on(socket, "vote", json => {
-        Js.log("received vote");
+        let trackId = json |> Json.Decode.(field("trackId", string));
+        let userId = json |> Json.Decode.(field("userId", string));
+        Js.log3("received vote", trackId, userId);
+
+        dispatch(VoteOnTrack(trackId, userId));
+
+        let state = getState();
+
+        let json = Json.Encode.(object_([
+            ("tracks", state.tracks |> list(Bragi.Encode.track)),
+            ("currentTrack", nullable(Bragi.Encode.currentTrack, state.currentTrack))
+        ]));
+
+        IO.Socket.emit(socket, "newQueue", json);
     });
 
     IO.Socket.on(socket, "addTrack", json => {
