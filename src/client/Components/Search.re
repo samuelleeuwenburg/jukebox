@@ -121,7 +121,7 @@ module Styles = {
 
 module Track = {
     [@react.component]
-    let make = (~dispatch, ~track: Spotify.track, ~token: string, ~user: Spotify.user, ~socket: IO.socket) => {
+    let make = (~dispatch, ~track: Spotify.track, ~user: Spotify.user, ~socket: IO.socket) => {
         let artist = List.hd(track.artists);
         let image = track.album.images
         |> List.sort((a: Spotify.image, b: Spotify.image) => b.width - a.width)
@@ -265,7 +265,6 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
             <Track
                 key=track.uri
                 socket=state.socket
-                token=token
                 track=track
                 user=user
                 dispatch=dispatch

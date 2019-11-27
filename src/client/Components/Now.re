@@ -131,9 +131,9 @@ module Controls = {
 [@react.component]
 let make = (~dispatch, ~state: Types.state) => {
 
-    let position  = state.currentTrack
+    let position = state.currentTrack
     ->Belt.Option.map(currentTrack => { currentTrack.position })
-    ->Belt.Option.getWithDefault(0);
+    ->Belt.Option.getWithDefault(0.0);
 
     let imageUrl  = state.currentTrack
     ->Belt.Option.map(currentTrack => { currentTrack.track.imageUrl })
@@ -143,7 +143,7 @@ let make = (~dispatch, ~state: Types.state) => {
     ->Belt.Option.map(currentTrack => { currentTrack.track.durationMs })
     ->Belt.Option.getWithDefault(0);
 
-    let fraction = float_of_int(position) /. float_of_int(duration);
+    let fraction = position /. float_of_int(duration);
     let percentage = fraction *. 100.0;
 
     <div className=Styles.currentTrackContainer>
