@@ -30,6 +30,7 @@ module Encode = {
             object_([
                 ("id", string(track.id)),
                 ("name", string(track.name)),
+                ("artist", string(track.artist)),
                 ("uri", string(track.uri)),
                 ("userId", string(track.userId)),
                 ("durationMs", int(track.durationMs)),
