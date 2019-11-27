@@ -1,3 +1,5 @@
+open Webapi.Dom;
+
 module Styles = {
     open Css;
 
@@ -58,13 +60,13 @@ module Styles = {
         marginRight(px(20))
     ]);
 
-    let searchButtonContainer = (query) => style([
+    let searchButtonContainer = (showSearch) => style([
         position(absolute),
         left(zero),
         bottom(zero),
         cursor(`pointer),
         selector("& svg path", [
-            SVG.fill(query === "" ? Style.Colors.lightGray : Style.Colors.lightestGray)
+            SVG.fill(showSearch ? Style.Colors.lightestGray : Style.Colors.lightGray)
         ])
     ]);
 
@@ -79,22 +81,42 @@ module Styles = {
         overflow(auto),
         left(px(20)),
         maxHeight(`calc(`sub, vh(100.0), px(60))),
+        height(vh(100.0)),
         media("(min-width: 640px)", [
             padding2(px(20), px(40)),
             width(px(580)),
             transform(translateX(px(-40))),
-            left(initial)
+            left(initial),
+            height(initial)
         ])
     ]);
 
-    let clearIconContainer = (hasValue) => {
+    let clearIconContainer = (showSearch, hasQuery) => {
         style([
         position(absolute),
         right(zero),
         bottom(zero),
-        hasValue === "" ?  display(none) : display(inline),
+        showSearch || hasQuery ? display(inline) : display(none),
         cursor(`pointer)
     ])};
+
+    let recentSearchQuery = style([
+        fontSize(px(20)),
+        fontWeight(bold),
+        paddingTop(px(5)),
+        paddingBottom(px(5)),
+        cursor(`pointer),
+        selector("&:hover", [
+            backgroundColor(Style.Colors.darkGray)
+        ])
+    ]);
+
+    let recentSearchesTitle = style([
+        fontSize(px(20)),
+        fontWeight(bold),
+        color(Style.Colors.lightGray),
+        marginBottom(px(5))
+    ]);
 }   
 
 module Track = {
@@ -143,9 +165,13 @@ module Track = {
 
 [@react.component]
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
-
+    let (showSearch, setShowSearch) = React.useState(() => false)
+    let searchContainerRef = React.useRef(Js.Nullable.null);
+    
     let getTracks(query) = {
         Js.log2(query, "get tracks query")
+
+        LocalStorage.setQueryToStorage(query);
         Js.Promise.(
             Spotify.getTracks(token, query)
             |> then_(tracks => {
@@ -154,7 +180,78 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
             })
         ) |> ignore;
     };
-    
+
+    let debouncedGetTracks = React.useRef(Debouncer.make(~wait=500, (query) => getTracks(query)));
+
+    let onChanges(value: string) =  {
+        if (value === "") {
+            dispatch(Types.ClearSearch)
+        } else {
+            dispatch(Types.UpdateQuery(value))
+            React.Ref.current(debouncedGetTracks, value)
+        }
+        |> ignore;
+    };
+
+    let onFocus = () => {
+        setShowSearch(_ => true);
+    };
+
+    let closeRecentSearches = () => {
+        setShowSearch(_ => false);
+    };
+
+    let closeSearch = () => {
+        dispatch(Types.ClearSearch);
+        closeRecentSearches();
+    };
+
+    let handleClickoutside = (domElement: Dom.element, target: Dom.mouseEvent, fn) => {
+        let targetElement = MouseEvent.target(target) |> EventTarget.unsafeAsElement;
+        let elementContainsTarget = domElement |> Element.contains(targetElement);
+        elementContainsTarget ? () : fn();
+    }
+
+    let handleMouseDown = (event) => {
+        searchContainerRef
+        ->React.Ref.current
+        ->Js.Nullable.toOption
+        ->Belt.Option.map(refValue => 
+            handleClickoutside(refValue, event, closeRecentSearches)
+        )
+    }
+    ->ignore;
+
+    React.useEffect1(() => {
+        if (showSearch) {
+            Document.addClickEventListener(handleMouseDown, document);
+        } else {
+            Document.removeClickEventListener(handleMouseDown, document);
+        }
+        Some(() => Document.removeClickEventListener(handleMouseDown, document));
+    }, [|showSearch|]);
+
+    let recentSearches = {
+        let onQueryClick = (query: string) => {
+            dispatch(Types.UpdateQuery(query));
+            getTracks(query);
+        }
+
+        let queries = LocalStorage.getRecentSearchesFromStorage()
+        |> List.map(query => {
+            <div className=Styles.recentSearchQuery key={query} onClick={_ => onQueryClick(query)}>
+                {React.string(query)}
+            </div>
+        })
+        |> Array.of_list
+        |> React.array;
+
+        <div className=Styles.resultsContainer>
+            <div className=Styles.recentSearchesTitle>{React.string("Recent searches")}</div> 
+            {queries}
+        </div>
+    }   
+
     let results = state.results
     ->Belt.Option.flatMap(results => {
         state.user->Belt.Option.map(user => (results, user));
@@ -162,7 +259,8 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     ->Belt.Option.map(values => {
         open Spotify;
         let (results, user) = values;
-        let tracks = results.items
+
+        let results = results.items
         |> List.map(track => {
             <Track
                 key=track.uri
@@ -176,25 +274,13 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         |> Array.of_list
         |> React.array;
 
-        <ul className=Styles.resultsContainer>{tracks}</ul>
+        <ul className=Styles.resultsContainer>{results}</ul>
     })
     ->Belt.Option.getWithDefault(React.null);
-    
-    let debouncedGetTracks = React.useRef(Debouncer.make(~wait=500, (query) => getTracks(query)));
 
-    let onChanges(value) =  {
-        if (value === "") {
-            dispatch(Types.ClearSearch)
-        } else {
-            dispatch(Types.UpdateQuery(value))
-            React.Ref.current(debouncedGetTracks, value)
-        }
-        |> ignore;
-    };
-
-    <div className=Styles.searchContainer>
+    <div className=Styles.searchContainer ref={ReactDOMRe.Ref.domRef(searchContainerRef)}>
         <div className=Styles.inputContainer>
-            <span className=Styles.searchButtonContainer(state.query)>
+            <span className=Styles.searchButtonContainer(showSearch)>
                 <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">
                     <path 
                         id="iconfinder_67_111124" 
@@ -206,12 +292,13 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 </svg>
             </span>
             <input
+                onFocus={_ => onFocus() }
                 className=Styles.input
                 placeholder="Search for tracks"
                 value={state.query}
                 onChange={event => onChanges(ReactEvent.Form.target(event)##value)}
             />
-            <span className=Styles.clearIconContainer(state.query) onClick={_ => dispatch(Types.ClearSearch)}>
+            <span className=Styles.clearIconContainer(showSearch, String.length(state.query) > 1) onClick={_ => closeSearch()}>
                 <svg width="13.414" height="13.414" viewBox="0 0 13.414 13.414">
                     <g id="Group_2" transform="translate(-1180.703 -25.116)">
                         <line id="Line_31" x2="12" y2="12" transform="translate(1181.41 25.823)" fill="none" stroke="#b3b3b3" strokeWidth="1"/>
@@ -220,6 +307,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 </svg>
             </span>
         </div>
-        {results}
+        {showSearch ? recentSearches : React.null}
+        {showSearch ? results : React.null}
     </div>
 };
