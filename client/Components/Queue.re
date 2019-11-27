@@ -131,7 +131,7 @@ module Styles = {
 module Track = {
     [@react.component]
     let make = (~socket: IO.socket, ~track: Bragi.track, ~user: Spotify.user) => {
-        let hasVoted = Belt.List.getBy(track.upvotes, vote => vote === user.id,)
+        let hasVoted = Belt.List.getBy(track.upvotes, vote => vote === user.id)
         ->Belt.Option.isSome
 
         let voteTrack = React.useCallback0(() => {
