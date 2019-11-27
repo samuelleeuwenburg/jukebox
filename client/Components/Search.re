@@ -91,12 +91,12 @@ module Styles = {
         ])
     ]);
 
-    let clearIconContainer = (hasValue) => {
+    let clearIconContainer = (showSearch) => {
         style([
         position(absolute),
         right(zero),
         bottom(zero),
-        hasValue === "" ?  display(none) : display(inline),
+        showSearch ? display(inline) : display(none),
         cursor(`pointer)
     ])};
 
@@ -165,7 +165,7 @@ module Track = {
 
 [@react.component]
 let make = (~dispatch, ~token: string, ~state: Types.state) => {
-    let (showSearches, setShowSearches) = React.useState(() => false)
+    let (showSearch, setShowSearch) = React.useState(() => false)
     let searchContainerRef = React.useRef(Js.Nullable.null);
     
     let getTracks(query) = {
@@ -194,11 +194,11 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     };
 
     let onFocus = () => {
-        setShowSearches(_ => true);
+        setShowSearch(_ => true);
     };
 
     let closeRecentSearches = () => {
-        setShowSearches(_ => false);
+        setShowSearch(_ => false);
     };
 
     let closeSearch = () => {
@@ -208,9 +208,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
 
     let handleClickoutside = (domElement: Dom.element, target: Dom.mouseEvent, fn) => {
         let targetElement = MouseEvent.target(target) |> EventTarget.unsafeAsElement;
-        Js.log("clickoutside")
         let elementContainsTarget = domElement |> Element.contains(targetElement);
-        Js.log2(elementContainsTarget, "contains")
         elementContainsTarget ? () : fn();
     }
 
@@ -225,19 +223,19 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     ->ignore;
 
     React.useEffect1(() => {
-        if (showSearches) {
+        if (showSearch) {
             Document.addClickEventListener(handleMouseDown, document);
         } else {
             Document.removeClickEventListener(handleMouseDown, document);
         }
         Some(
             () => {
-                if (showSearches) {
+                if (showSearch) {
                     Document.removeClickEventListener(handleMouseDown, document)
                 }
             }
         );
-    }, [|showSearches|]);
+    }, [|showSearch|]);
 
     let recentSearches = {
         let onQueryClick = (query: string) => {
@@ -306,7 +304,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 value={state.query}
                 onChange={event => onChanges(ReactEvent.Form.target(event)##value)}
             />
-            <span className=Styles.clearIconContainer(state.query) onClick={_ => closeSearch()}>
+            <span className=Styles.clearIconContainer(showSearch) onClick={_ => closeSearch()}>
                 <svg width="13.414" height="13.414" viewBox="0 0 13.414 13.414">
                     <g id="Group_2" transform="translate(-1180.703 -25.116)">
                         <line id="Line_31" x2="12" y2="12" transform="translate(1181.41 25.823)" fill="none" stroke="#b3b3b3" strokeWidth="1"/>
@@ -315,7 +313,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 </svg>
             </span>
         </div>
-        {showSearches ? recentSearches : React.null}
-        {showSearches ? results : React.null}
+        {showSearch ? recentSearches : React.null}
+        {showSearch ? results : React.null}
     </div>
 };
