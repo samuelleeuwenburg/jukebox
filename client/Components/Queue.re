@@ -134,7 +134,7 @@ module Track = {
         let hasVoted = Belt.List.getBy(track.upvotes, vote => vote === user.id)
         ->Belt.Option.isSome
 
-        let voteTrack = React.useCallback0(() => {
+        let voteTrack = React.useCallback1(() => {
             switch (hasVoted) {
                 | true => ()
                 | false => {
@@ -150,7 +150,7 @@ module Track = {
                     ();
                 }
             }
-        });
+        }, [|hasVoted|]);
 
         <li className=Styles.trackContainer>
             <div 
