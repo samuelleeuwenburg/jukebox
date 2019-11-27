@@ -171,7 +171,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     let getTracks(query) = {
         Js.log2(query, "get tracks query")
 
-        Localstorage.setQueryToStorage(query);
+        LocalStorage.setQueryToStorage(query);
         Js.Promise.(
             Spotify.getTracks(token, query)
             |> then_(tracks => {
@@ -228,13 +228,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
         } else {
             Document.removeClickEventListener(handleMouseDown, document);
         }
-        Some(
-            () => {
-                if (showSearch) {
-                    Document.removeClickEventListener(handleMouseDown, document)
-                }
-            }
-        );
+        Some(() => Document.removeClickEventListener(handleMouseDown, document));
     }, [|showSearch|]);
 
     let recentSearches = {
@@ -243,7 +237,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
             getTracks(query);
         }
 
-        let queries = Localstorage.getRecentSearchesFromStorage()
+        let queries = LocalStorage.getRecentSearchesFromStorage()
         |> List.map(query => {
             <div className=Styles.recentSearchQuery key={query} onClick={_ => onQueryClick(query)}>
                 {React.string(query)}
