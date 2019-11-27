@@ -60,13 +60,13 @@ module Styles = {
         marginRight(px(20))
     ]);
 
-    let searchButtonContainer = (query) => style([
+    let searchButtonContainer = (showSearch) => style([
         position(absolute),
         left(zero),
         bottom(zero),
         cursor(`pointer),
         selector("& svg path", [
-            SVG.fill(query === "" ? Style.Colors.lightGray : Style.Colors.lightestGray)
+            SVG.fill(showSearch ? Style.Colors.lightestGray : Style.Colors.lightGray)
         ])
     ]);
 
@@ -91,12 +91,12 @@ module Styles = {
         ])
     ]);
 
-    let clearIconContainer = (showSearch) => {
+    let clearIconContainer = (showSearch, hasQuery) => {
         style([
         position(absolute),
         right(zero),
         bottom(zero),
-        showSearch ? display(inline) : display(none),
+        showSearch || hasQuery ? display(inline) : display(none),
         cursor(`pointer)
     ])};
 
@@ -286,7 +286,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
 
     <div className=Styles.searchContainer ref={ReactDOMRe.Ref.domRef(searchContainerRef)}>
         <div className=Styles.inputContainer>
-            <span className=Styles.searchButtonContainer(state.query)>
+            <span className=Styles.searchButtonContainer(showSearch)>
                 <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">
                     <path 
                         id="iconfinder_67_111124" 
@@ -304,7 +304,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
                 value={state.query}
                 onChange={event => onChanges(ReactEvent.Form.target(event)##value)}
             />
-            <span className=Styles.clearIconContainer(showSearch) onClick={_ => closeSearch()}>
+            <span className=Styles.clearIconContainer(showSearch, String.length(state.query) > 1) onClick={_ => closeSearch()}>
                 <svg width="13.414" height="13.414" viewBox="0 0 13.414 13.414">
                     <g id="Group_2" transform="translate(-1180.703 -25.116)">
                         <line id="Line_31" x2="12" y2="12" transform="translate(1181.41 25.823)" fill="none" stroke="#b3b3b3" strokeWidth="1"/>
