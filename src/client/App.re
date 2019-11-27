@@ -61,9 +61,9 @@ let make = (~token: string) => {
     // Listen for new queue
     React.useEffect1(() => {
         let handleNewQueue = json => {
+            let now = json |> Bragi.Decode.now;
             Js.log("newQueue received!");
             Js.log(json);
-            let now = json |> Bragi.Decode.now;
 
             switch (now.tracks) {
             | Some(tracks) => dispatch(Types.UpdateQueue(tracks))
@@ -73,7 +73,7 @@ let make = (~token: string) => {
             switch ((state.currentTrack, now.currentTrack)) {
             | (Some(local), Some(server)) => {
                 if (local.track.id !== server.track.id) {
-                    Spotify.playTrack(token, server.track.uri, 0) |> ignore;
+                    Spotify.playTrack(token, server.track.uri, 0.0) |> ignore;
                     dispatch(Types.UpdateCurrentTrack(server));
                     ()
                 }

@@ -1,7 +1,7 @@
 let baseUrl = "https://api.spotify.com/v1";
 let clientId = "4f8a771ca0aa41b28424ad9fc737dacc";
 let scopes = "user-modify-playback-state user-read-playback-state user-read-private user-read-email";
-let redirectUrl = "http://127.0.0.1:8000";
+let redirectUrl = "http://127.0.0.1:3000";
 
 let authenticate = () => {
     open Utils;
@@ -170,14 +170,14 @@ let getPlayer = (token: string) => {
 };
 
 
-let playTrack = (token: string, songUri: string, positionMs: int) => {
+let playTrack = (token: string, songUri: string, positionMs: float) => {
     let url = baseUrl ++ "/me/player/play";
     let payload = Js.Dict.empty();
 
     Js.Dict.set(payload, "uris", Js.Json.array([|Js.Json.string(songUri)|]));
 
-    if (positionMs !== 0) {
-        Js.Dict.set(payload, "position_ms", Js.Json.number(positionMs |> float_of_int));
+    if (positionMs != 0.0) {
+        Js.Dict.set(payload, "position_ms", Js.Json.number(positionMs));
     }
 
     Js.Promise.(

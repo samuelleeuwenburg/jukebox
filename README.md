@@ -1,21 +1,17 @@
 # Jukebox
 The idea is to revive an old jukebox app that used to be available on the Spotify apps platform (before it was killed).
 
-## Run client
+## Develop
 ```sh
 npm install
-npm run client:server
-# in a new tab
-npm run client:start
+# the following three commands each in a seperate tab
+npm run bsb
+npm run client:watch
+npm run server:watch
 ```
 
-## Run server
+## Build
 ```sh
-npm run server:dev
-```
-
-## Build client & server
-```sh
-npm run client:build
-npm run server:build
+npm install
+npm run build
 ```
