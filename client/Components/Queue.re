@@ -131,10 +131,8 @@ module Styles = {
 module Track = {
     [@react.component]
     let make = (~socket: IO.socket, ~track: Bragi.track, ~user: Spotify.user) => {
-        let findIdInVotes = try (List.find(vote => vote === user.id, track.upvotes)) {
-        | Not_found => ""
-        };
-        let hasVoted = String.length(findIdInVotes) >= 1;
+        let hasVoted = Belt.List.getBy(track.upvotes, vote => vote === user.id,)
+        ->Belt.Option.isSome
 
         let voteTrack = React.useCallback0(() => {
             switch (hasVoted) {
