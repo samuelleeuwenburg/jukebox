@@ -76,8 +76,12 @@ module Styles = {
         ])
     ]);
 
-    let voteContainer = style([
-        cursor(`pointer)
+    let voteContainer = (hasVoted) => style([
+        cursor(hasVoted ? `default : `pointer),
+        pointerEvents(hasVoted ? `none : `auto),
+        selector("& path", [
+            SVG.fill(hasVoted ? Style.Colors.lightestGray : `transparent),
+        ]),
     ]);
 
     let addedByColumn = style([
@@ -99,8 +103,11 @@ module Styles = {
         ])
     ]);
 
-    let voteIcon = style([
-        marginRight(px(10))
+    let voteIcon =  style([
+        marginRight(px(10)),
+        selector("&:hover path", [
+            SVG.fill(Style.Colors.lightestGray)
+        ])
     ]);
 
     let votes = style([
@@ -124,18 +131,26 @@ module Styles = {
 module Track = {
     [@react.component]
     let make = (~socket: IO.socket, ~track: Bragi.track, ~user: Spotify.user) => {
-        let voteTrack = React.useCallback0(() => {
-            let data = Json.Encode.(object_([
-                ("trackId", string(track.id)),
-                ("userId", string(user.id)),
-            ])); 
+        let hasVoted = Belt.List.getBy(track.upvotes, vote => vote === user.id)
+        ->Belt.Option.isSome
 
-            Js.log("voting on track");
-            Js.log(data);
-            
-            IO.socketEmit(socket, "vote", data) |> ignore;
-            ();
-        });
+        let voteTrack = React.useCallback1(() => {
+            switch (hasVoted) {
+                | true => ()
+                | false => {
+                    let data = Json.Encode.(object_([
+                        ("trackId", string(track.id)),
+                        ("userId", string(user.id)),
+                    ])); 
+
+                    Js.log("voting on track");
+                    Js.log(data);
+                    
+                    IO.socketEmit(socket, "vote", data) |> ignore;
+                    ();
+                }
+            }
+        }, [|hasVoted|]);
 
         <li className=Styles.trackContainer>
             <div 
@@ -155,15 +170,23 @@ module Track = {
                 {React.string(track.userId)}
             </div>
             <div className=Styles.voteColumn>
-                <div className=Styles.voteContainer onClick={_ => voteTrack()}>
+                <div className=Styles.voteContainer(hasVoted) onClick={_ => voteTrack()}>
                     <span className=Styles.voteIcon>
-                        <svg width="19.575" height="18.993" viewBox="0 0 19.575 18.993">
-                            <path 
-                                id="Path_5" 
-                                d="M12.37,84.63a.6.6,0,1,0,0-1.2c-.007,0-.011,0-.018,0l-1.429,0a.761.761,0,0,0-.1-.007.821.821,0,0,0-.815.826L10,94.171a.811.811,0,0,0,.815.815.839.839,0,0,0,.13,0H12.37v0a.571.571,0,0,0,0-1.142V93.83H11.2l.034-9.2,1.131,0Zm16.843-.858a2.126,2.126,0,0,0-1.859-1.041.743.743,0,0,0-.123-.009l-4.7-.016a9.434,9.434,0,0,0,.52-2.959,8.867,8.867,0,0,0-.206-1.888h-.011A2.381,2.381,0,0,0,20.522,76a2.258,2.258,0,0,0-2.184,2.428c0,.074-.007.146,0,.217a5.033,5.033,0,0,1-4.488,4.746v1.256l-.018,5.084v5.257h.244l11.438,0,.2-.007a1.742,1.742,0,0,0,1.093-.37,2.412,2.412,0,0,0,.858-.965.829.829,0,0,0,.116-.255l1.763-7.877a.841.841,0,0,0,.025-.278,2.45,2.45,0,0,0-.356-1.469Zm-.748,1.209-1.9,8.412h0a.763.763,0,0,1-.6.468.827.827,0,0,0-.105,0l-10.912-.013,0-9.319c2.043-.921,3.541-1.823,4.314-3.973,0,0,0,0,0,0a6.33,6.33,0,0,0,.2-.759,7.648,7.648,0,0,0,.121-1.33,1.029,1.029,0,0,1,1.015-1.212,1.443,1.443,0,0,1,1.149,1.2,7.613,7.613,0,0,1,.13,1.308,6.154,6.154,0,0,1-.108,1.3h-.011a7.087,7.087,0,0,1-.7,1.989l.009.009a.826.826,0,0,0-.085.365c0,.457.437.5.887.5l5.463.007.336.011v0a.783.783,0,0,1,.712.376.809.809,0,0,1,.081.663ZM14.076,94.991h.007s.009,0-.007,0-.011,0-.007,0Z" 
-                                transform="translate(-10 -76)" 
-                                fill="#b3b3b3"
-                            />
+                        <svg width="19.775" height="18.874" viewBox="0 0 19.775 18.874">
+                            <g transform="translate(-1328.764 -398.263)">
+                                <path 
+                                d="M1362.145,419.369a6.177,6.177,0,0,0,3.835-2.661,5.423,5.423,0,0,0,.987-3.6s-.2-.822,1.5-1.277,1.806,1.916,1.806,1.916a7.648,7.648,0,0,1,0,1.721c-.126.4-.62,2.454-.62,2.454h5.373s2.343.1,1.964,1.513-1.964,8.7-1.964,8.7a1.515,1.515,0,0,1-1.495,1.495H1362V418.7" 
+                                transform="translate(-29 -13)" 
+                                fill="none" 
+                                stroke="#b3b3b3" 
+                                strokeWidth="1"/>
+                                <path 
+                                d="M1360.094,1577.225h-3.831v10.444h9.073" 
+                                transform="translate(-27 -1171.032)" 
+                                fill="none" 
+                                stroke="#b3b3b3" 
+                                strokeWidth="1"/>
+                            </g>
                         </svg>
                     </span>
                     <div className=Styles.votes>{React.string(string_of_int(List.length(track.upvotes)))}</div>
