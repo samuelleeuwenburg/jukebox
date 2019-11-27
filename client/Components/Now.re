@@ -53,6 +53,7 @@ module Styles = {
         width(px(150)),
         height(px(150)),
         marginBottom(px(10)),
+        backgroundColor(Style.Colors.darkerGray),
         margin3(zero, auto, px(10)),
         media("(min-width: 640px)", [
             width(px(170)),
@@ -130,39 +131,61 @@ module Controls = {
 [@react.component]
 let make = (~dispatch, ~state: Types.state) => {
 
-    state.currentTrack
-    ->Belt.Option.map(currentTrack => {
-        let fraction = float_of_int(currentTrack.position) /. float_of_int(currentTrack.track.durationMs);
-        let percentage = fraction *. 100.0;
+    let position  = state.currentTrack
+    ->Belt.Option.map(currentTrack => { currentTrack.position })
+    ->Belt.Option.getWithDefault(0);
 
-        <div className=Styles.currentTrackContainer>
-            <div 
+    let imageUrl  = state.currentTrack
+    ->Belt.Option.map(currentTrack => { currentTrack.track.imageUrl })
+    ->Belt.Option.getWithDefault("");
+
+    let duration = state.currentTrack
+    ->Belt.Option.map(currentTrack => { currentTrack.track.durationMs })
+    ->Belt.Option.getWithDefault(0);
+
+    let fraction = float_of_int(position) /. float_of_int(duration);
+    let percentage = fraction *. 100.0;
+
+    <div className=Styles.currentTrackContainer>
+        {state.currentTrack
+        ->Belt.Option.isSome 
+            ? <div 
                 className=Styles.albumCover
                 style=(ReactDOMRe.Style.make(
-                    ~backgroundImage="url('"++currentTrack.track.imageUrl++"')", ())
+                    ~backgroundImage="url('"++imageUrl++"')", ())
                 )
-            >
-            </div>
-            <div className=Styles.trackContainer>
-                <div className=Styles.currentTrack>
-                    {React.string(currentTrack.track.name)}
-                </div>
-                <div className=Styles.currentArtist>
-                    {React.string(currentTrack.track.artist)}
-                </div>
-
-                <Controls state=state />
-                <div className=Styles.progressBar>
-                    <div 
+                /> :
+            <div className=Styles.albumCover />
+        }
+        <div className=Styles.trackContainer>
+            {state.currentTrack
+                ->Belt.Option.map(currentTrack => {
+                    <>
+                        <div className=Styles.currentTrack>
+                            {React.string(currentTrack.track.name)}
+                        </div>
+                        <div className=Styles.currentArtist>
+                            {React.string(currentTrack.track.artist)}
+                        </div>
+                    </>
+                }) 
+                ->Belt.Option.getWithDefault(React.null);
+            }
+            <Controls state=state />
+            <div className=Styles.progressBar>
+                {state.currentTrack
+                ->Belt.Option.isSome 
+                    ? <div 
                         className=Styles.progression 
                         style=(ReactDOMRe.Style.make(
                             ~width=string_of_float(percentage) ++ "%", ())
                         )
-                    ></div>
-                </div>
+                        />
+                    : React.null
+                }
+
             </div>
         </div>
-    })
-    ->Belt.Option.getWithDefault(React.null);
+    </div>
 };
 
