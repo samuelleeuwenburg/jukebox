@@ -6,10 +6,12 @@ let initialState: Types.state = {
     queue: None,
     currentTrack: None,
     socket: IO.getSocket(Bragi.baseUrl, "/socket.io"),
+    token: None,
 };
 
 let reducer = (state: Types.state, action: Types.action) => {
     switch (action) {
+    | Types.UpdateToken(token) => {...state, token: Some(token)}
     | Types.UpdateQuery(query) => {...state, query: query}
     | Types.UpdatePlayer(player) => {...state, player: Some(player)}
     | Types.UpdateUser(user) => {...state, user: Some(user)}

@@ -6,9 +6,11 @@ type state = {
     queue: option(list(Bragi.track)),
     currentTrack: option(Bragi.currentTrack),
     socket: IO.socket,
+    token: option(string),
 };
 
 type action =
+    | UpdateToken(string)
     | UpdateQuery(string)
     | UpdateResults(Spotify.response(Spotify.track))
     | UpdatePlayer(Spotify.player)

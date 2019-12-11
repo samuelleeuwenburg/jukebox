@@ -31,32 +31,48 @@ module Styles = {
 
 }
 [@react.component]
-let make = (~token: string) => {
+let make = () => {
     let (state, dispatch) = React.useReducer(State.reducer, State.initialState);
 
-    // get Spotify data
     React.useEffect0(() => {
-        Js.Promise.(
-            Spotify.getPlayer(token)
-            |> then_(player => {
-                dispatch(Types.UpdatePlayer(player))
-                resolve(player)
-            })
-        ) |> ignore;
+        IO.socketEmit(state.socket, "getQueue", ());
 
-        Js.Promise.(
-            Spotify.getUser(token)
-            |> then_(user => {
-                dispatch(Types.UpdateUser(user));
-                resolve(user)
-            })
-        ) |> ignore;
+        switch (Utils.getToken()) {
+            | Some(token) => {
+                dispatch(Types.UpdateToken(token))
+            }
+            | None => ()
+        }
+
+        None
+    })
+
+    // get Spotify data
+    React.useEffect1(() => {
+        switch (state.token) {
+            | Some(token) => {
+                Js.Promise.(
+                    Spotify.getPlayer(token)
+                    |> then_(player => {
+                        dispatch(Types.UpdatePlayer(player))
+                        resolve(player)
+                    })
+                ) |> ignore;
+
+                Js.Promise.(
+                    Spotify.getUser(token)
+                    |> then_(user => {
+                        dispatch(Types.UpdateUser(user));
+                        resolve(user)
+                    })
+                ) |> ignore;
+            }
+            | None => ()
+        }
 
         None;
-    });
+    }, [|state.token|]);
 
-    // get initial queue
-    React.useEffect0(() => IO.socketEmit(state.socket, "getQueue", ()));
 
     // Listen for new queue
     React.useEffect1(() => {
@@ -73,14 +89,19 @@ let make = (~token: string) => {
             switch ((state.currentTrack, now.currentTrack)) {
             | (Some(local), Some(server)) => {
                 if (local.track.id !== server.track.id) {
-                    Spotify.playTrack(token, server.track.uri, 0.0) |> ignore;
+                    Belt.Option.map(state.token, (token) => {
+                        Spotify.playTrack(token, server.track.uri, 0.0);
+                    });
                     dispatch(Types.UpdateCurrentTrack(server));
                     ()
                 }
             }
             | (None, Some(server)) => {
-                Spotify.playTrack(token, server.track.uri, server.position) |> ignore;
-                dispatch(Types.UpdateCurrentTrack(server));
+                Belt.Option.map(state.token, (token) => {
+                    Spotify.playTrack(token, server.track.uri, server.position);
+                });
+
+                dispatch(Types.UpdateCurrentTrack(server)); 
                 ()
             }
             | _ => ()
@@ -88,6 +109,7 @@ let make = (~token: string) => {
         };
 
         IO.socketOn(state.socket, "newQueue", handleNewQueue);
+        
         Some(() => IO.socketOff(state.socket, "newQueue", handleNewQueue));
     }, [|state.currentTrack|]);
 
@@ -99,19 +121,28 @@ let make = (~token: string) => {
         Some(() => Js.Global.clearInterval(intervalId));
     });
 
-    <>
-        <div className=Styles.header>
-            <Search dispatch=dispatch token=token state=state />
-        </div>
-        <div className=Styles.appContainer>
-            <Now dispatch=dispatch state=state/>
-            <Queue dispatch=dispatch state=state />
-        </div>
-        <div className=Styles.logoutContainer>
-            <Logout />
-        </div>
-        <div className=Styles.infoContainer>
-            <Info state=state />
-        </div>
-    </>
+    switch (state.token) {
+        | Some(token) => {
+            <>
+                <div className=Styles.header>
+                    <Search dispatch=dispatch token=token state=state />
+                </div>
+                <div className=Styles.appContainer>
+                    <Now dispatch=dispatch state=state/>
+                    <Queue dispatch=dispatch state=state />
+                </div>
+                <div className=Styles.logoutContainer>
+                    <Logout />
+                </div>
+                <div className=Styles.infoContainer>
+                    <Info state=state />
+                </div>
+            </>
+        }
+        | None => {
+            <div className="header">
+                <Login />
+            </div>
+        }
+    };
 };
