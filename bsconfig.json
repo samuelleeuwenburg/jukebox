@@ -1,7 +1,7 @@
 {
   "name": "Bragi",
   "reason": {
-    "react-jsx": 3,
+    "react-jsx": 3
   },
   "sources": {
     "dir" : "src",
@@ -20,6 +20,7 @@
     "bs-fetch",
     "bs-webapi",
     "bs-css",
+    "bs-css-emotion",
     "bs-express",
     "@glennsl/bs-json"
   ],

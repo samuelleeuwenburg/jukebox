@@ -1,5 +1,7 @@
 public/client.js
 
+*.swp
+*.swo
 .DS_Store
 *.bs.js
 .merlin
