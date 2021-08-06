@@ -1,12 +1,12 @@
-const path = require('path');
+const path = require("path");
 
 module.exports = {
   entry: {
-      client: './src/client/Index.bs.js',
+    client: "./src/client/Client.bs.js",
   },
-  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  mode: process.env.NODE_ENV === "production" ? "production" : "development",
   output: {
     path: path.join(__dirname, "public"),
-    filename: '[name].js',
+    filename: "[name].js",
   },
 };

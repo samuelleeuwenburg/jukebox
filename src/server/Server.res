@@ -1,40 +1,20 @@
-@bs.val external __dirname: string = ""
-
-module Http = {
-  type t
-  @bs.module("http") external createServer: Express.App.t => t = "createServer"
-  @bs.send external listen: (t, int, unit => unit) => unit = ""
-}
-
-module IO = {
-  type t
-  type socket
-  type options = Js.Json.t
-  @bs.module external io: (Http.t, options) => t = "socket.io"
-  @bs.send external on: (t, string, socket => unit) => unit = "on"
-  @bs.send external emit: (t, string, 'a) => unit = "emit"
-
-  module Socket = {
-    @bs.send external on: (socket, string, Js.Json.t => unit) => unit = "on"
-    @bs.send external emit: (socket, string, 'a) => unit = "emit"
-  }
-}
+@val external __dirname: string = ""
 
 module Path = {
   type pathT
-  @bs.module("path") @bs.splice
+  @module("path") @variadic
   external join: array<string> => string = ""
 }
 
 module State = {
   type state = {
-    tracks: list<Bragi.track>,
-    currentTrack: option<Bragi.currentTrack>,
+    tracks: list<Types.track>,
+    currentTrack: option<Types.currentTrack>,
   }
 
   type action =
-    | PlayTrack(Bragi.track)
-    | AddTrack(Bragi.track)
+    | PlayTrack(Types.track)
+    | AddTrack(Types.track)
     | RemoveTrack(string)
     | VoteOnTrack(string, string)
     | Tick
@@ -54,9 +34,9 @@ module State = {
     (get, set)
   }
 
-  let sortQueue = (tracks: list<Bragi.track>) => {
+  let sortQueue = (tracks: list<Types.track>) => {
     open List
-    tracks |> sort((a: Bragi.track, b: Bragi.track) =>
+    tracks |> sort((a: Types.track, b: Types.track) =>
       if a.upvotes->length == b.upvotes->length {
         a.timestamp -. b.timestamp |> int_of_float
       } else {
@@ -103,12 +83,13 @@ module State = {
       }
     | RemoveTrack(trackId) => {
         ...state,
-        tracks: state.tracks |> List.filter((track: Bragi.track) => track.id != trackId),
+        tracks: state.tracks |> List.filter((track: Types.track) => track.id != trackId),
       }
     | VoteOnTrack(trackId, userId) => {
         ...state,
-        tracks: state.tracks |> List.map((track: Bragi.track) =>
-          if track.id == trackId && track.upvotes->Belt.List.has(userId, \"<>") {
+        tracks: state.tracks
+        |> List.map((track: Types.track) =>
+          if track.id == trackId && track.upvotes->Belt.List.has(userId, (a, b) => a == b) {
             {
               ...track,
               upvotes: list{userId, ...track.upvotes},
@@ -116,7 +97,8 @@ module State = {
           } else {
             track
           }
-        ) |> sortQueue,
+        )
+        |> sortQueue,
       }
     }
 
@@ -125,13 +107,15 @@ module State = {
 
 let (getState, dispatch) = State.init(State.update, State.initialState)
 let app = Express.express()
-let http = Http.createServer(app)
-let io = IO.io(http, Json.Encode.object_(list{("path", Json.Encode.string("/socket.io"))}))
+let server = Http.createServer(app)
+let io = SocketIO.Server.server(server)
 
-IO.on(io, "connect", socket => {
+// let io = IO.io(http, Json.Encode.object_(list{("path", Json.Encode.string("/socket.io"))}))
+
+io->SocketIO.Server.on("connect", socket => {
   Js.log("connection received")
 
-  IO.Socket.on(socket, "vote", json => {
+  socket->SocketIO.on("vote", json => {
     let trackId = json |> {
       open Json.Decode
       field("trackId", string)
@@ -149,16 +133,16 @@ IO.on(io, "connect", socket => {
     let json = {
       open Json.Encode
       object_(list{
-        ("tracks", state.tracks |> list(Bragi.Encode.track)),
-        ("currentTrack", nullable(Bragi.Encode.currentTrack, state.currentTrack)),
+        ("tracks", state.tracks |> list(Types.Encode.track)),
+        ("currentTrack", nullable(Types.Encode.currentTrack, state.currentTrack)),
       })
     }
 
-    IO.emit(io, "newQueue", json)
+    io->SocketIO.Server.emit("newQueue", json)
   })
 
-  IO.Socket.on(socket, "addTrack", json => {
-    let track = json |> Bragi.Decode.track
+  socket->SocketIO.on("addTrack", json => {
+    let track = json |> Types.Decode.track
     let track = {
       ...track,
       timestamp: Js.Date.now(),
@@ -171,41 +155,42 @@ IO.on(io, "connect", socket => {
     let json = {
       open Json.Encode
       object_(list{
-        ("tracks", state.tracks |> list(Bragi.Encode.track)),
-        ("currentTrack", nullable(Bragi.Encode.currentTrack, state.currentTrack)),
+        ("tracks", state.tracks |> list(Types.Encode.track)),
+        ("currentTrack", nullable(Types.Encode.currentTrack, state.currentTrack)),
       })
     }
 
-    Js.log2("adding track ->", track |> Bragi.Encode.track)
-    IO.emit(io, "newQueue", json)
+    Js.log2("adding track ->", track |> Types.Encode.track)
+    io->SocketIO.Server.emit("newQueue", json)
   })
 
-  IO.Socket.on(socket, "getQueue", _ => {
+  socket->SocketIO.on("getQueue", _ => {
     Js.log("get queue")
 
     let state = getState()
     let json = {
       open Json.Encode
       object_(list{
-        ("tracks", state.tracks |> list(Bragi.Encode.track)),
-        ("currentTrack", nullable(Bragi.Encode.currentTrack, state.currentTrack)),
+        ("tracks", state.tracks |> list(Types.Encode.track)),
+        ("currentTrack", nullable(Types.Encode.currentTrack, state.currentTrack)),
       })
     }
 
-    IO.Socket.emit(socket, "newQueue", json)
+    socket->SocketIO.emit("newQueue", json)
   })
 })
 
-\"@@"(
-  Express.App.useOnPath(app, ~path="/"),
+Express.App.useOnPath(
+  app,
+  ~path="/",
   {
-    let publicFolder = Path.join([__dirname, "../../public"])
     let options = Express.Static.defaultOptions()
-    Express.Static.make(publicFolder, options) |> Express.Static.asMiddleware
+    let path = Path.join([__dirname, "../../public"])
+    Express.Static.make(path, options) |> Express.Static.asMiddleware
   },
 )
 
-Http.listen(http, 3000, () => {
+server->Http.listen(3000, () => {
   Js.Global.setInterval(() => dispatch(Tick) |> ignore, 500) |> ignore
 
   Js.Global.setInterval(() => {
@@ -222,13 +207,13 @@ Http.listen(http, 3000, () => {
         let json = {
           open Json.Encode
           object_(list{
-            ("tracks", state.tracks |> list(Bragi.Encode.track)),
-            ("currentTrack", nullable(Bragi.Encode.currentTrack, state.currentTrack)),
+            ("tracks", state.tracks |> list(Types.Encode.track)),
+            ("currentTrack", nullable(Types.Encode.currentTrack, state.currentTrack)),
           })
         }
 
-        Js.log2("NOW PLAYING ->", track |> Bragi.Encode.track)
-        IO.emit(io, "newQueue", json)
+        Js.log2("NOW PLAYING ->", track |> Types.Encode.track)
+        io->SocketIO.Server.emit("newQueue", json)
       } else {
         Js.log("no tracks in queue, waiting...")
       }

@@ -111,7 +111,7 @@ module Styles = {
 
 module Track = {
   @react.component
-  let make = (~socket: IO.socket, ~track: Bragi.track, ~user: Spotify.user) => {
+  let make = (~socket: SocketIO.socket, ~track: Types.track, ~user: Spotify.user) => {
     let hasVoted = Belt.List.getBy(track.upvotes, vote => vote === user.id)->Belt.Option.isSome
 
     let voteTrack = React.useCallback1(() =>
@@ -126,7 +126,7 @@ module Track = {
             Js.log("voting on track")
             Js.log(data)
 
-            IO.socketEmit(socket, "vote", data) |> ignore
+            socket->SocketIO.emit("vote", data) |> ignore
             ()
           }
     , [hasVoted])
@@ -134,7 +134,7 @@ module Track = {
     <li className=Styles.trackContainer>
       <div
         className=Styles.albumCover
-        style={ReactDOMRe.Style.make(~backgroundImage="url('" ++ (track.imageUrl ++ "')"), ())}
+        style={ReactDOM.Style.make(~backgroundImage="url('" ++ (track.imageUrl ++ "')"), ())}
       />
       <div className=Styles.trackInfoContainer>
         <div className=Styles.column> {React.string(track.name)} </div>
@@ -173,16 +173,15 @@ module Track = {
 }
 
 @react.component
-let make = (~dispatch as _, ~state: Types.state) =>
+let make = (~socket: SocketIO.socket, ~dispatch as _, ~state: Types.state) =>
   state.queue
   ->Belt.Option.flatMap(tracks => state.user->Belt.Option.map(user => (tracks, user)))
   ->Belt.Option.map(values => {
-    open Bragi
     let (tracks, user) = values
 
     let trackEls =
       tracks
-      |> List.map(track => <Track key=track.id socket=state.socket track user />)
+      |> List.map(track => <Track key=track.id socket track user />)
       |> Array.of_list
       |> React.array
 

@@ -50,7 +50,7 @@ module Styles = {
       list{
         width(px(170)),
         height(px(170)),
-        margin4(~top=zero, ~right=px(20), ~bottom=zero, ~left=zero)
+        margin4(~top=zero, ~right=px(20), ~bottom=zero, ~left=zero),
       },
     ),
   })
@@ -105,14 +105,16 @@ module Controls = {
 }
 
 @react.component
-let make = (~dispatch as _, ~state: Types.state) => state.currentTrack->Belt.Option.map(currentTrack => {
+let make = (~dispatch as _, ~state: Types.state) =>
+  state.currentTrack
+  ->Belt.Option.map(currentTrack => {
     let fraction = currentTrack.position /. float_of_int(currentTrack.track.durationMs)
     let percentage = fraction *. 100.0
 
     <div className=Styles.currentTrackContainer>
       <div
         className=Styles.albumCover
-        style={ReactDOMRe.Style.make(
+        style={ReactDOM.Style.make(
           ~backgroundImage="url('" ++ (currentTrack.track.imageUrl ++ "')"),
           (),
         )}
@@ -124,9 +126,10 @@ let make = (~dispatch as _, ~state: Types.state) => state.currentTrack->Belt.Opt
         <div className=Styles.progressBar>
           <div
             className=Styles.progression
-            style={ReactDOMRe.Style.make(~width=Js.Float.toString(percentage) ++ "%", ())}
+            style={ReactDOM.Style.make(~width=Js.Float.toString(percentage) ++ "%", ())}
           />
         </div>
       </div>
     </div>
-  })->Belt.Option.getWithDefault(React.null)
+  })
+  ->Belt.Option.getWithDefault(React.null)

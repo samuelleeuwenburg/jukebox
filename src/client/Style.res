@@ -1,5 +1,5 @@
 module Colors = {
-  open Css
+  open CssJs
 
   let error = hex("AF2415")
 
@@ -10,29 +10,24 @@ module Colors = {
   let darkerGray = hex("252526")
   let darkestGray = hex("141518")
 
-  global(
+  global(.
     "body",
-    list{
-      backgroundColor(darkestGray),
-      margin(zero),
-      color(lightestGray),
-      fontFamily(#sansSerif)
-    },
+    [backgroundColor(darkestGray), margin(zero), color(lightestGray), fontFamily(#sansSerif)],
   )
 
-  global("h1, h2, h3", list{margin3(~top=zero, ~h=zero, ~bottom=px(20))})
+  global(. "h1, h2, h3", [margin3(~top=zero, ~h=zero, ~bottom=px(20))])
 
-  global("button", list{color(hex("fff")), backgroundColor(darkGray)})
+  global(. "button", [color(hex("fff")), backgroundColor(darkGray)])
 
-  global("ul, ol", list{margin(zero), padding(px(20))})
+  global(. "ul, ol", [margin(zero), padding(px(20))])
 
-  global("li", list{listStyleType(none)})
+  global(. "li", [listStyleType(none)])
 
-  global("*, *:after, *:before", list{boxSizing(borderBox)})
+  global(. "*, *:after, *:before", [boxSizing(borderBox)])
 
-  global(
+  global(.
     "input",
-    list{
+    [
       margin(zero),
       padding(zero),
       border(px(0), #solid, transparent),
@@ -48,7 +43,7 @@ module Colors = {
       /* Browsers have different default form fonts */
       color(lightestGray),
       fontSize(px(20)),
-      selector("&:focus", list{borderBottom(px(1), #solid, lightestGray)}),
-    },
+      selector("&:focus", [borderBottom(px(1), #solid, lightestGray)]),
+    ],
   )
 }

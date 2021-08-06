@@ -2,11 +2,16 @@
   "name": "jukebox",
   "version": "0.1.0",
   "scripts": {
-    "clean": "bsb -clean-world",
-    "build": "bsb -make-world && NODE_ENV=production webpack",
-    "bsb": "bsb -make-world -w -ws _ ",
-    "client:watch": "webpack -w",
-    "server:watch": "nodemon src/server/Server.bs.js --watch src/server"
+    "res:build": "rescript",
+    "res:watch": "rescript build -w",
+    "res:clean": "rescript clean -with-deps",
+    "res:format": "rescript format -all",
+    "webpack:build": "webpack --mode=production",
+    "webpack:watch": "webpack --mode=development --watch",
+    "server:watch": "nodemon src/server/Server.bs.js",
+    "start": "node src/server/Server.bs.js",
+    "clean": "rm -f public/client.js && npm run res:clean",
+    "build": "npm run clean && npm run res:build && npm run webpack:build"
   },
   "keywords": [
     "BuckleScript",
@@ -17,16 +22,17 @@
   "license": "MIT",
   "dependencies": {
     "@glennsl/bs-json": "^5.0.2",
+    "@rescript/react": "^0.10.3",
     "bs-css-emotion": "^2.2.0",
-    "bs-express": "^1.0.0",
+    "bs-express": "^1.0.2",
     "bs-fetch": "^0.6.2",
     "bs-platform": "^8.3.3",
     "bs-webapi": "^0.19.1",
     "re-debouncer": "^2.0.0",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
-    "reason-react": "^0.9.1",
-    "socket.io": "^2.3.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "rescript": "^9.1.4",
+    "socket.io": "^4.1.1",
     "webpack": "^4.41.2"
   },
   "devDependencies": {

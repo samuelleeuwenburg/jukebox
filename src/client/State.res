@@ -1,28 +1,19 @@
 let initialState: Types.state = {
+  token: None,
   query: "",
   results: None,
   player: None,
   user: None,
   queue: None,
   currentTrack: None,
-  socket: IO.getSocket(Bragi.baseUrl, "/socket.io"),
 }
 
-let reducer = (state: Types.state, action: Types.action) =>
+let rec reducer = (state: Types.state, action: Types.action) =>
   switch action {
-  | Types.UpdateQuery(query) => {...state, query: query}
-  | Types.UpdatePlayer(player) => {...state, player: Some(player)}
-  | Types.UpdateUser(user) => {...state, user: Some(user)}
-  | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
-  | Types.UpdateResults(response) => {...state, results: Some(response)}
-  | Types.UpdateCurrentTrack(currentTrack) => {
-      ...state,
-      currentTrack: Some({
-        ...currentTrack,
-        timestamp: Js.Date.now() -. currentTrack.position,
-      }),
-    }
-  | Types.Tick => state.currentTrack->Belt.Option.map(currentTrack => {
+  | Types.NoOp => state
+  | Types.Tick =>
+    state.currentTrack
+    ->Belt.Option.map(currentTrack => {
       let position = Js.Date.now() -. currentTrack.timestamp
       if position > float_of_int(currentTrack.track.durationMs) {
         {
@@ -35,7 +26,34 @@ let reducer = (state: Types.state, action: Types.action) =>
           currentTrack: Some({...currentTrack, position: position}),
         }
       }
-    })->Belt.Option.getWithDefault(state)
+    })
+    ->Belt.Option.getWithDefault(state)
+  | Types.UpdateToken(token) => {...state, token: token}
+  | Types.UpdateQuery(query) => {...state, query: query}
+  | Types.UpdatePlayer(player) => {...state, player: Some(player)}
+  | Types.UpdateUser(user) => {...state, user: Some(user)}
+  | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
+  | Types.UpdateResults(response) => {...state, results: Some(response)}
   | Types.ClearSearch => {...state, query: "", results: None}
+  | Types.UpdateCurrentTrack(currentTrack) => {
+      ...state,
+      currentTrack: Some({
+        ...currentTrack,
+        timestamp: Js.Date.now() -. currentTrack.position,
+      }),
+    }
+  | Types.HandleNow(now) => {
+      let addTracks =
+        now.tracks
+        ->Belt.Option.map(t => Types.UpdateQueue(t))
+        ->Belt.Option.getWithDefault(Types.NoOp)
+
+      let addCurrentTrack =
+        now.currentTrack
+        ->Belt.Option.map(t => Types.UpdateCurrentTrack(t))
+        ->Belt.Option.getWithDefault(Types.NoOp)
+
+      state->reducer(addTracks)->reducer(addCurrentTrack)
+    }
   | Types.Error => state
   }

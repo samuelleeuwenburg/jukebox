@@ -113,7 +113,7 @@ module Styles = {
 
 module Track = {
   @react.component
-  let make = (~dispatch, ~track: Spotify.track, ~user: Spotify.user, ~socket: IO.socket) => {
+  let make = (~dispatch, ~track: Spotify.track, ~user: Spotify.user, ~socket: SocketIO.socket) => {
     let artist = List.hd(track.artists)
     let image =
       track.album.images
@@ -138,13 +138,13 @@ module Track = {
       Js.log(data)
 
       dispatch(Types.ClearSearch)
-      IO.socketEmit(socket, "addTrack", data) |> ignore
+      socket->SocketIO.emit("addTrack", data) |> ignore
     })
 
     <li className=Styles.trackContainer onClick={_ => addTrack()}>
       <div
         className=Styles.albumCover
-        style={ReactDOMRe.Style.make(~backgroundImage="url('" ++ (image.url ++ "')"), ())}
+        style={ReactDOM.Style.make(~backgroundImage="url('" ++ (image.url ++ "')"), ())}
       />
       <div className=Styles.trackInfoContainer>
         <div className=Styles.trackName> {React.string(track.name)} </div>
@@ -155,7 +155,7 @@ module Track = {
 }
 
 @react.component
-let make = (~dispatch, ~token: string, ~state: Types.state) => {
+let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
   let (showSearch, setShowSearch) = React.useState(() => false)
   let searchContainerRef = React.useRef(Js.Nullable.null)
 
@@ -163,13 +163,17 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     Js.log2(query, "get tracks query")
 
     LocalStorage.setQueryToStorage(query)
-    {
-      open Js.Promise
-      Spotify.getTracks(token, query) |> then_(tracks => {
-        dispatch(Types.UpdateResults(tracks))
-        resolve(tracks)
-      })
-    } |> ignore
+
+    switch state.token {
+    | None => Js.log("search: trying to call `getTracks` without token")
+    | Some(token) => {
+        open Js.Promise
+        Spotify.getTracks(token, query) |> then_(tracks => {
+          dispatch(Types.UpdateResults(tracks))
+          resolve(tracks)
+        })
+      } |> ignore
+    }
   }
 
   let debouncedGetTracks = Debouncer.make(~wait=500, query => getTracks(query))
@@ -242,7 +246,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
 
       let results =
         results.items
-        |> List.map(track => <Track key=track.uri socket=state.socket track user dispatch />)
+        |> List.map(track => <Track key=track.uri socket track user dispatch />)
         |> Array.of_list
         |> React.array
 
@@ -250,7 +254,7 @@ let make = (~dispatch, ~token: string, ~state: Types.state) => {
     })
     ->Belt.Option.getWithDefault(React.null)
 
-  <div className=Styles.searchContainer ref={ReactDOMRe.Ref.domRef(searchContainerRef)}>
+  <div className=Styles.searchContainer ref={ReactDOM.Ref.domRef(searchContainerRef)}>
     <div className=Styles.inputContainer>
       <span className={Styles.searchButtonContainer(showSearch)}>
         <svg width="15.761" height="15.761" viewBox="0 0 15.761 15.761">

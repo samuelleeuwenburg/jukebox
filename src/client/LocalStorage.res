@@ -8,6 +8,7 @@ let getRecentSearchesFromStorage = () =>
       open Json.Decode
       list(string)
     }
+
   | None => list{}
   }
 

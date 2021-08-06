@@ -1,27 +1,20 @@
-@bs.val external encodeURIComponent: string => string = ""
+@val external encodeURIComponent: string => string = ""
 
-let goToUrl: string => unit = %bs.raw(
-  ` function (url) {
+let goToUrl: string => unit = %raw(` function (url) {
         window.location.href = url;
-    } `
-)
+    } `)
 
-let getToken = () => {
+let getToken = (urlHash: string) => {
+  open Dom.Storage
   open Webapi.Url.URLSearchParams
   open Belt.Option
 
-  switch {
-    open Dom.Storage
-    localStorage |> getItem("access_token")
-  } {
+  switch localStorage |> getItem("access_token") {
   | Some(token) => Some(token)
   | None =>
-    let url = ReasonReactRouter.useUrl()
-    (url.hash |> make |> get("access_token"))->flatMap(token => {
-        {
-          open Dom.Storage
-          localStorage |> setItem("access_token", token)
-        }
+    (urlHash |> make |> get("access_token"))
+      ->flatMap(token => {
+        localStorage |> setItem("access_token", token)
         Some(token)
       })
   }

@@ -1,0 +1,41 @@
+on:
+  push:
+    branches: [ main, develop ]
+
+name: Deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Build JS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+      - run: npm ci
+      - run: npm run build
+
+      - name: Copying files to the server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          source: "public,src,node_modules"
+          target: ${{ secrets.REMOTE_DIR }}
+
+      - name: Run Node
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ${{ secrets.REMOTE_DIR }}
+            pm2 stop 'jukebox'
+            pm2 start ./src/server/Server.bs.js --name 'jukebox'
