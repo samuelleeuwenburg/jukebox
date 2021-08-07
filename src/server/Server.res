@@ -1,9 +1,8 @@
-@val external __dirname: string = ""
+@val external __dirname: string = "__dirname"
 
 module Path = {
-  type pathT
-  @module("path") @variadic
-  external join: array<string> => string = ""
+  @module("path") external resolve: (string, string) => string = "resolve"
+  @module("path") @variadic external join: array<string> => string = "join"
 }
 
 module State = {
@@ -214,8 +213,6 @@ server->Http.listen(3000, () => {
 
         Js.log2("NOW PLAYING ->", track |> Types.Encode.track)
         io->SocketIO.Server.emit("newQueue", json)
-      } else {
-        Js.log("no tracks in queue, waiting...")
       }
     | _ => ()
     }

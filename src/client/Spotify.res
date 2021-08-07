@@ -1,7 +1,8 @@
+@scope(("window", "location")) @val external origin: string = "origin"
+
 let baseUrl = "https://api.spotify.com/v1"
 let clientId = "4f8a771ca0aa41b28424ad9fc737dacc"
 let scopes = "user-modify-playback-state user-read-playback-state user-read-private user-read-email"
-let redirectUrl = "http://127.0.0.1:3000"
 
 let authenticate = () => {
   open Utils
@@ -13,7 +14,7 @@ let authenticate = () => {
     (encodeURIComponent(clientId) ++
     ("&scope=" ++
     (encodeURIComponent(scopes) ++
-    ("&redirect_uri=" ++ (encodeURIComponent(redirectUrl) ++ "&state=abcdefg")))))))
+    ("&redirect_uri=" ++ (encodeURIComponent(origin) ++ "&state=abcdefg")))))))
 
   goToUrl(url)
 }

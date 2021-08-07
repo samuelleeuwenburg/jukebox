@@ -1,4 +1,4 @@
-@val external encodeURIComponent: string => string = ""
+@val external encodeURIComponent: string => string = "encodeURIComponent"
 
 let goToUrl: string => unit = %raw(` function (url) {
         window.location.href = url;

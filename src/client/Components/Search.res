@@ -166,7 +166,8 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
 
     switch state.token {
     | None => Js.log("search: trying to call `getTracks` without token")
-    | Some(token) => {
+    | Some(token) =>
+      {
         open Js.Promise
         Spotify.getTracks(token, query) |> then_(tracks => {
           dispatch(Types.UpdateResults(tracks))

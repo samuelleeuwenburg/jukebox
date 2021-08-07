@@ -55,7 +55,8 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
 
   React.useEffect2(() => {
     switch (state.token, state.currentTrack, currentTrack) {
-    | (Some(token), Some(server), Some(local)) => if local.track.id !== server.track.id {
+    | (Some(token), Some(server), Some(local)) =>
+      if local.track.id !== server.track.id {
         Spotify.playTrack(token, server.track.uri, 0.0)->ignore
         setCurrentTrack(_ => state.currentTrack)
       }
