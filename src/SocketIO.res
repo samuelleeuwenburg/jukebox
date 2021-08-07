@@ -1,4 +1,6 @@
-type socket
+type conn = {id: string}
+
+type socket = {conn: conn}
 
 @send external on: (socket, string, 'a => unit) => unit = "on"
 @send external off: (socket, string, 'a => unit) => unit = "off"

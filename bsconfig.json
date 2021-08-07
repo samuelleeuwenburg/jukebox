@@ -16,8 +16,8 @@
   "namespace": true,
   "bs-dependencies": [
     "@rescript/react",
+    "rescript-debounce-react",
     "bs-express",
-    "re-debouncer",
     "bs-fetch",
     "bs-webapi",
     "bs-css",

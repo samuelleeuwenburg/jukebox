@@ -17,7 +17,7 @@ let rec reducer = (state: Types.state, action: Types.action) => {
     state.currentTrack
     ->Belt.Option.map(currentTrack => {
       let position = Js.Date.now() -. currentTrack.timestamp
-      if position > float_of_int(currentTrack.track.durationMs) {
+      if position > float_of_int(currentTrack.track.track.durationMs) {
         {
           ...state,
           currentTrack: None,

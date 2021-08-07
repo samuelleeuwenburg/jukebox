@@ -34,14 +34,14 @@ type artist = {name: string}
 
 type album = {
   name: string,
-  images: list<image>,
+  images: array<image>,
 }
 
 type track = {
   id: string,
   uri: string,
   name: string,
-  artists: list<artist>,
+  artists: array<artist>,
   album: album,
   durationMs: int,
 }
@@ -83,7 +83,7 @@ module Decode = {
     open Json.Decode
     {
       name: json |> field("name", string),
-      images: json |> field("images", list(image)),
+      images: json |> field("images", array(image)),
     }
   }
 
@@ -93,7 +93,7 @@ module Decode = {
       id: json |> field("id", string),
       uri: json |> field("uri", string),
       name: json |> field("name", string),
-      artists: json |> field("artists", list(artist)),
+      artists: json |> field("artists", array(artist)),
       album: json |> field("album", album),
       durationMs: json |> field("duration_ms", int),
     }
@@ -130,6 +130,41 @@ module Decode = {
       isPlaying: json |> field("is_playing", bool),
       progressMs: json |> field("progress_ms", int),
     }
+  }
+}
+
+module Encode = {
+  open Json.Encode
+
+  let artist = (artist: artist) => {
+    object_(list{("name", string(artist.name))})
+  }
+
+  let image = (image: image) => {
+    object_(list{
+      ("url", string(image.url)),
+      ("height", int(image.height)),
+      ("width", int(image.width)),
+    })
+  }
+
+  let album = (album: album) => {
+    object_(list{("name", string(album.name)), ("images", album.images |> array(image))})
+  }
+
+  let user = (user: user) => {
+    object_(list{("id", string(user.id)), ("display_name", string(user.displayName))})
+  }
+
+  let track = (track: track) => {
+    object_(list{
+      ("id", string(track.id)),
+      ("name", string(track.name)),
+      ("artists", track.artists |> array(artist)),
+      ("uri", string(track.uri)),
+      ("album", album(track.album)),
+      ("duration_ms", int(track.durationMs)),
+    })
   }
 }
 
@@ -208,4 +243,18 @@ let playTrack = (token: string, songUri: string, positionMs: float) => {
     ),
   ) |> then_(Fetch.Response.json)
   //@TODO: return something back to the application?
+}
+
+module Track = {
+  let getImage = (track: track) => {
+    let sorted =
+      track.album.images->Belt.SortArray.stableSortBy((a: image, b: image) => b.width - a.width)
+
+    sorted[0]
+  }
+
+  let getArtistName = (track: track) => {
+    let first = track.artists[0]
+    first.name
+  }
 }

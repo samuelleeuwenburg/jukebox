@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 16.x
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run build
 
       - name: Copying files to the server

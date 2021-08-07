@@ -113,32 +113,18 @@ module Styles = {
 
 module Track = {
   @react.component
-  let make = (~dispatch, ~track: Spotify.track, ~user: Types.user, ~socket: SocketIO.socket) => {
-    let artist = List.hd(track.artists)
-    let image =
-      track.album.images
-      |> List.sort((a: Spotify.image, b: Spotify.image) => b.width - a.width)
-      |> List.hd
+  let make = (~dispatch, ~track: Spotify.track, ~user: Spotify.user, ~socket: SocketIO.socket) => {
+    let artist = track->Spotify.Track.getArtistName
+    let image = track->Spotify.Track.getImage
 
     let addTrack = React.useCallback0(() => {
-      let data = {
+      let json = {
         open Json.Encode
-        object_(list{
-          ("id", string(track.id)),
-          ("name", string(track.name)),
-          ("artist", string(artist.name)),
-          ("uri", string(track.uri)),
-          ("user", Types.Encode.user(user)),
-          ("imageUrl", string(image.url)),
-          ("durationMs", int(track.durationMs)),
-        })
+        object_(list{("track", Spotify.Encode.track(track)), ("user", Spotify.Encode.user(user))})
       }
 
-      Js.log("adding track")
-      Js.log(data)
-
       dispatch(Types.ClearSearch)
-      socket->SocketIO.emit("addTrack", data) |> ignore
+      socket->SocketIO.emit("addTrack", json) |> ignore
     })
 
     <li className=Styles.trackContainer onClick={_ => addTrack()}>
@@ -148,7 +134,7 @@ module Track = {
       />
       <div className=Styles.trackInfoContainer>
         <div className=Styles.trackName> {React.string(track.name)} </div>
-        <div className=Styles.artistName> {React.string(artist.name)} </div>
+        <div className=Styles.artistName> {React.string(artist)} </div>
       </div>
     </li>
   }
@@ -167,21 +153,16 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
     | Some(token) =>
       {
         open Js.Promise
-        Spotify.getTracks(token, query)
-          |> then_((tracks: Spotify.response<Spotify.track>) => {
-            Js.log2("res: ", tracks)
-            dispatch(Types.UpdateResults(tracks))
-            resolve(tracks)
-          })
-          |> catch(err => {
-            Js.log2("spotify.getTracks: ", err)
-            reject(Js.Exn.raiseError("foo"))
-            })
+        Spotify.getTracks(token, query) |> then_((tracks: Spotify.response<Spotify.track>) => {
+          Js.log2("res: ", tracks)
+          dispatch(Types.UpdateResults(tracks))
+          resolve(tracks)
+        })
       } |> ignore
     }
   }
 
-  let debouncedGetTracks = Debouncer.make(~wait=500, query => getTracks(query))
+  let debouncedGetTracks = ReactDebounce.useDebounced(~wait=500, query => getTracks(query))
 
   let onChanges = (value: string) =>
     if value === "" {
@@ -244,9 +225,8 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
 
   let results =
     state.results
-    ->Belt.Option.flatMap(results => state.user->Belt.Option.map(user => (results, user)))
+    ->Belt.Option.flatMap(results => state.spotifyUser->Belt.Option.map(user => (results, user)))
     ->Belt.Option.map(values => {
-      open Spotify
       let (results, user) = values
 
       let results =

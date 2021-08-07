@@ -4,13 +4,8 @@ type user = {
 }
 
 type track = {
-  id: string,
-  name: string,
-  artist: string,
-  uri: string,
+  track: Spotify.track,
   user: user,
-  imageUrl: string,
-  durationMs: int,
   upvotes: array<user>,
   timestamp: float,
 }
@@ -26,25 +21,45 @@ type now = {
   currentTrack: option<currentTrack>,
 }
 
+type state = {
+  token: option<string>,
+  query: string,
+  results: option<Spotify.response<Spotify.track>>,
+  player: option<Spotify.player>,
+  spotifyUser: option<Spotify.user>,
+  user: option<user>,
+  queue: option<array<track>>,
+  currentTrack: option<currentTrack>,
+  userList: option<array<user>>,
+}
+
+type action =
+  | NoOp
+  | Tick
+  | UpdateQuery(string)
+  | UpdateResults(Spotify.response<Spotify.track>)
+  | UpdatePlayer(Spotify.player)
+  | UpdateSpotifyUser(Spotify.user)
+  | UpdateUser(user)
+  | UpdateQueue(array<track>)
+  | UpdateCurrentTrack(currentTrack)
+  | UpdateToken(option<string>)
+  | UpdateUserList(array<user>)
+  | HandleNow(now)
+  | ClearSearch
+  | Error
+
 module Encode = {
   open Json
 
   let user = (user: user) => {
-    Encode.object_(list{
-      ("id", Encode.string(user.id)),
-      ("color", Encode.string(user.color)),
-    })
+    Encode.object_(list{("id", Encode.string(user.id)), ("color", Encode.string(user.color))})
   }
 
   let track = (track: track) => {
     Encode.object_(list{
-      ("id", Encode.string(track.id)),
-      ("name", Encode.string(track.name)),
-      ("artist", Encode.string(track.artist)),
-      ("uri", Encode.string(track.uri)),
+      ("track", Spotify.Encode.track(track.track)),
       ("user", user(track.user)),
-      ("durationMs", Encode.int(track.durationMs)),
-      ("imageUrl", Encode.string(track.imageUrl)),
       ("upvotes", track.upvotes |> Encode.array(user)),
       ("timestamp", Encode.float(track.timestamp)),
     })
@@ -71,17 +86,9 @@ module Decode = {
 
   let track = json => {
     {
-      id: json |> Decode.field("id", Decode.string),
-      name: json |> Decode.field("name", Decode.string),
-      artist: json |> Decode.field("artist", Decode.string),
-      uri: json |> Decode.field("uri", Decode.string),
+      track: json |> Decode.field("track", Spotify.Decode.track),
       user: json |> Decode.field("user", user),
-      durationMs: json |> Decode.field("durationMs", Decode.int),
-      imageUrl: json |> Decode.field("imageUrl", Decode.string),
-      upvotes: json |> Decode.withDefault(
-        [],
-        Decode.field("upvotes", Decode.array(user)),
-      ),
+      upvotes: json |> Decode.withDefault([], Decode.field("upvotes", Decode.array(user))),
       timestamp: json |> Decode.withDefault(0.0, Decode.field("timestamp", Decode.float)),
     }
   }
@@ -102,30 +109,13 @@ module Decode = {
   }
 }
 
-type state = {
-  token: option<string>,
-  query: string,
-  results: option<Spotify.response<Spotify.track>>,
-  player: option<Spotify.player>,
-  spotifyUser: option<Spotify.user>,
-  user: option<user>,
-  queue: option<array<track>>,
-  currentTrack: option<currentTrack>,
-  userList: option<array<(string, string)>>,
+module Track = {
+  let fromSpotifyTrack = (track: Spotify.track, user: user) => {
+    {
+      track: track,
+      user: user,
+      timestamp: Js.Date.now(),
+      upvotes: [user],
+    }
+  }
 }
-
-type action =
-  | NoOp
-  | Tick
-  | UpdateQuery(string)
-  | UpdateResults(Spotify.response<Spotify.track>)
-  | UpdatePlayer(Spotify.player)
-  | UpdateSpotifyUser(Spotify.user)
-  | UpdateUser(user)
-  | UpdateQueue(array<track>)
-  | UpdateCurrentTrack(currentTrack)
-  | UpdateToken(option<string>)
-  | UpdateUserList(array<(string, string)>)
-  | HandleNow(now)
-  | ClearSearch
-  | Error

@@ -111,22 +111,27 @@ module Styles = {
 
 module Track = {
   @react.component
-  let make = (~socket: SocketIO.socket, ~track: Types.track, ~user: Types.user) => {
+  let make = (
+    ~socket: SocketIO.socket,
+    ~track: Types.track,
+    ~user: Types.user,
+    ~spotifyUser: Spotify.user,
+  ) => {
     let hasVoted = Belt.Array.getBy(track.upvotes, vote => vote.id === user.id)->Belt.Option.isSome
-
+    let image = track.track->Spotify.Track.getImage
     let voteTrack = React.useCallback1(() =>
       hasVoted
         ? ()
         : {
-            let data = {
+            let json = {
               open Json.Encode
-              object_(list{("trackId", string(track.id)), ("userId", string(user.id))})
+              object_(list{
+                ("trackId", string(track.track.id)),
+                ("user", spotifyUser->Spotify.Encode.user),
+              })
             }
 
-            Js.log("voting on track")
-            Js.log(data)
-
-            socket->SocketIO.emit("vote", data) |> ignore
+            socket->SocketIO.emit("vote", json) |> ignore
             ()
           }
     , [hasVoted])
@@ -134,11 +139,13 @@ module Track = {
     <li className=Styles.trackContainer>
       <div
         className=Styles.albumCover
-        style={ReactDOM.Style.make(~backgroundImage="url('" ++ (track.imageUrl ++ "')"), ())}
+        style={ReactDOM.Style.make(~backgroundImage="url('" ++ (image.url ++ "')"), ())}
       />
       <div className=Styles.trackInfoContainer>
-        <div className=Styles.column> {React.string(track.name)} </div>
-        <div className=Styles.column> {React.string(track.artist)} </div>
+        <div className=Styles.column> {React.string(track.track.name)} </div>
+        <div className=Styles.column>
+          {React.string(track.track->Spotify.Track.getArtistName)}
+        </div>
       </div>
       <div className=Styles.addedByColumn> {React.string(track.user.id)} </div>
       <div className=Styles.voteColumn>
@@ -174,24 +181,20 @@ module Track = {
 
 @react.component
 let make = (~socket: SocketIO.socket, ~dispatch as _, ~state: Types.state) =>
-  state.queue
-  ->Belt.Option.flatMap(tracks => state.user->Belt.Option.map(user => (tracks, user)))
-  ->Belt.Option.map(values => {
-    let (tracks, user) = values
+  switch (state.queue, state.user, state.spotifyUser) {
+  | (Some(tracks), Some(user), Some(spotifyUser)) => {
+      let trackEls =
+        tracks
+        ->Belt.Array.map(track => <Track key=track.track.id socket track user spotifyUser />)
+        ->React.array
 
-    let trackEls =
-      tracks
-      ->Belt.Array.map(track => <Track key=track.id socket track user />)
-      ->React.array
+      let title = if Belt.Array.length(tracks) == 0 {
+        <h2 className=Styles.queueTitle> {React.string("Queue is empty")} </h2>
+      } else {
+        <h2 className=Styles.queueTitle> {React.string("Next in queue")} </h2>
+      }
 
-    let title = if Belt.Array.length(tracks) == 0 {
-      <h2 className=Styles.queueTitle> {React.string("Queue is empty")} </h2>
-    } else {
-      <h2 className=Styles.queueTitle> {React.string("Next in queue")} </h2>
+      <> title <ul className=Styles.tracksContainer> trackEls </ul> </>
     }
-
-    <> title <ul className=Styles.tracksContainer> trackEls </ul> </>
-  })
-  ->Belt.Option.getWithDefault(
-    <p className=Styles.error> {React.string("ERROR: no queue found!")} </p>,
-  )
+  | _ => <p className=Styles.error> {React.string("ERROR: no queue found!")} </p>
+  }

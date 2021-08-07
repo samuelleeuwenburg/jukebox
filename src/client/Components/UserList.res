@@ -2,30 +2,18 @@ module Styles = {
   open CssJs
 
   let wrapper = style(. [
-    display(#flex),
-    flexDirection(row),
-    flexWrap(wrap),
     position(absolute),
     left(zero),
     bottom(zero),
     padding(px(16)),
+    lineHeight(px(22)),
   ])
 }
 
 @react.component
 let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
-  React.useEffect1(() => {
-    switch state.user {
-    | Some(user) => socket->SocketIO.emit("addUser", user)
-    | None => ()
-    }
-    None
-  }, [state.user])
-
-  let handleNewUserList = React.useCallback1((userList: array<(string, string)>) => {
+  let handleNewUserList = React.useCallback1((userList: array<Types.user>) => {
     Types.UpdateUserList(userList)->dispatch
-
-    Js.log2("newUserList received!", userList)
   }, [dispatch])
 
   // listen for new user list
@@ -38,11 +26,13 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
   | None => React.null
   | Some(userList) =>
     userList
-    ->Belt.Array.map(((user, color)) => {
-      <div style={ReactDOM.Style.make(~color, ())}> {React.string(user)} </div>
+    ->Belt.Array.map(user => {
+      <div key={user.id} style={ReactDOM.Style.make(~color=user.color, ())}>
+        {React.string(user.id)}
+      </div>
     })
     ->React.array
   }
 
-  <div className=Styles.wrapper> {content} </div>
+  <div className=Styles.wrapper> content </div>
 }

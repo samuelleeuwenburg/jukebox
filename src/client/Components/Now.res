@@ -108,20 +108,19 @@ module Controls = {
 let make = (~dispatch as _, ~state: Types.state) =>
   state.currentTrack
   ->Belt.Option.map(currentTrack => {
-    let fraction = currentTrack.position /. float_of_int(currentTrack.track.durationMs)
+    let fraction = currentTrack.position /. float_of_int(currentTrack.track.track.durationMs)
     let percentage = fraction *. 100.0
+    let image = currentTrack.track.track->Spotify.Track.getImage
+    let artist = currentTrack.track.track->Spotify.Track.getArtistName
 
     <div className=Styles.currentTrackContainer>
       <div
         className=Styles.albumCover
-        style={ReactDOM.Style.make(
-          ~backgroundImage="url('" ++ (currentTrack.track.imageUrl ++ "')"),
-          (),
-        )}
+        style={ReactDOM.Style.make(~backgroundImage="url('" ++ image.url ++ "')", ())}
       />
       <div className=Styles.trackContainer>
-        <div className=Styles.currentTrack> {React.string(currentTrack.track.name)} </div>
-        <div className=Styles.currentArtist> {React.string(currentTrack.track.artist)} </div>
+        <div className=Styles.currentTrack> {React.string(currentTrack.track.track.name)} </div>
+        <div className=Styles.currentArtist> {React.string(artist)} </div>
         <Controls state />
         <div className=Styles.progressBar>
           <div

@@ -28,10 +28,10 @@
     "bs-fetch": "^0.6.2",
     "bs-platform": "^8.3.3",
     "bs-webapi": "^0.19.1",
-    "re-debouncer": "^2.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "rescript": "^9.1.4",
+    "rescript-debounce-react": "^1.0.0",
     "socket.io": "^4.1.1",
     "webpack": "^4.41.2"
   },

@@ -3,12 +3,15 @@ let make = (~socket: SocketIO.socket) => {
   let (state, dispatch) = React.useReducer(State.reducer, State.initialState)
   let url = RescriptReactRouter.useUrl()
 
-  let handleNewQueue = React.useCallback2(json => {
+  let handleNewQueue = React.useCallback1(json => {
     let now = Types.Decode.now(json)
     Types.HandleNow(now)->dispatch
+  }, [dispatch])
 
-    Js.log2("newQueue received!", now)
-  }, (dispatch, state.currentTrack))
+  let handleNewUser = React.useCallback1(json => {
+    let user = Types.Decode.user(json)
+    Types.UpdateUser(user)->dispatch
+  }, [dispatch])
 
   // get spotify token
   React.useEffect2(() => {
@@ -22,11 +25,26 @@ let make = (~socket: SocketIO.socket) => {
     None
   })
 
+  // add spotify user
+  React.useEffect1(() => {
+    switch state.spotifyUser {
+    | Some(user) => socket->SocketIO.emit("addUser", user)
+    | None => ()
+    }
+    None
+  }, [state.spotifyUser])
+
   // listen for new queue
   React.useEffect1(() => {
     socket->SocketIO.on("newQueue", handleNewQueue)
     Some(() => socket->SocketIO.off("newQueue", handleNewQueue))
   }, [handleNewQueue])
+
+  // listen for new user
+  React.useEffect1(() => {
+    socket->SocketIO.on("newUser", handleNewUser)
+    Some(() => socket->SocketIO.off("newUser", handleNewUser))
+  }, [handleNewUser])
 
   // setup tick
   React.useEffect1(() => {
