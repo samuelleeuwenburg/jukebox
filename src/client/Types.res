@@ -91,6 +91,7 @@ type state = {
   user: option<Spotify.user>,
   queue: option<list<track>>,
   currentTrack: option<currentTrack>,
+  userList: option<array<(string, string)>>,
 }
 
 type action =
@@ -103,6 +104,7 @@ type action =
   | UpdateQueue(list<track>)
   | UpdateCurrentTrack(currentTrack)
   | UpdateToken(option<string>)
+  | UpdateUserList(array<(string, string)>)
   | HandleNow(now)
   | ClearSearch
   | Error

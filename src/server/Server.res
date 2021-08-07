@@ -9,11 +9,13 @@ module State = {
   type state = {
     tracks: list<Types.track>,
     currentTrack: option<Types.currentTrack>,
+    users: Belt.Set.String.t,
   }
 
   type action =
     | PlayTrack(Types.track)
     | AddTrack(Types.track)
+    | AddUser(string)
     | RemoveTrack(string)
     | VoteOnTrack(string, string)
     | Tick
@@ -76,6 +78,10 @@ module State = {
           position: 0.0,
         }),
       }
+    | AddUser(user) => {
+        ...state,
+        users: state.users->Belt.Set.String.add(user),
+      }
     | AddTrack(track) => {
         ...state,
         tracks: list{track, ...state.tracks} |> sortQueue,
@@ -84,14 +90,14 @@ module State = {
         ...state,
         tracks: state.tracks |> List.filter((track: Types.track) => track.id != trackId),
       }
-    | VoteOnTrack(trackId, userId) => {
+    | VoteOnTrack(trackId, user) => {
         ...state,
         tracks: state.tracks
         |> List.map((track: Types.track) =>
-          if track.id == trackId && track.upvotes->Belt.List.has(userId, (a, b) => a == b) {
+          if track.id == trackId && track.upvotes->Belt.List.has(user, (a, b) => a == b) {
             {
               ...track,
-              upvotes: list{userId, ...track.upvotes},
+              upvotes: list{user, ...track.upvotes},
             }
           } else {
             track
@@ -101,7 +107,11 @@ module State = {
       }
     }
 
-  let initialState = {tracks: list{}, currentTrack: None}
+  let initialState = {
+    tracks: list{},
+    currentTrack: None,
+    users: Belt.Set.String.empty,
+  }
 }
 
 let (getState, dispatch) = State.init(State.update, State.initialState)
@@ -109,23 +119,26 @@ let app = Express.express()
 let server = Http.createServer(app)
 let io = SocketIO.Server.server(server)
 
-// let io = IO.io(http, Json.Encode.object_(list{("path", Json.Encode.string("/socket.io"))}))
-
 io->SocketIO.Server.on("connect", socket => {
   Js.log("connection received")
 
-  socket->SocketIO.on("vote", json => {
-    let trackId = json |> {
-      open Json.Decode
-      field("trackId", string)
-    }
-    let userId = json |> {
-      open Json.Decode
-      field("userId", string)
-    }
-    Js.log3("received vote", trackId, userId)
+  socket->SocketIO.on("addUser", (user: Spotify.user) => {
+    Js.log2("user joined: ", user.displayName)
 
-    dispatch(VoteOnTrack(trackId, userId)) |> ignore
+    AddUser(user.displayName)->dispatch->ignore
+    let state = getState()
+    let userList = state.users->Belt.Set.String.toArray->Belt.Array.map(User.hash)
+
+    io->SocketIO.Server.emit("newUserList", userList)
+  })
+
+  socket->SocketIO.on("vote", json => {
+    let trackId = Json.Decode.field("trackId", Json.Decode.string, json)
+    let user = json->Spotify.Decode.user
+    Js.log3("received vote", trackId, user)
+
+    let (user, _) = user.displayName->User.hash
+    dispatch(VoteOnTrack(trackId, user))->ignore
 
     let state = getState()
 
@@ -142,10 +155,12 @@ io->SocketIO.Server.on("connect", socket => {
 
   socket->SocketIO.on("addTrack", json => {
     let track = json |> Types.Decode.track
+    let (user, _) = track.userId->User.hash
     let track = {
       ...track,
+      userId: user,
       timestamp: Js.Date.now(),
-      upvotes: list{track.userId},
+      upvotes: list{user},
     }
     dispatch(AddTrack(track)) |> ignore
 

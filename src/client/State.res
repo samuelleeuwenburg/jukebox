@@ -6,6 +6,7 @@ let initialState: Types.state = {
   user: None,
   queue: None,
   currentTrack: None,
+  userList: None,
 }
 
 let rec reducer = (state: Types.state, action: Types.action) =>
@@ -32,6 +33,7 @@ let rec reducer = (state: Types.state, action: Types.action) =>
   | Types.UpdateQuery(query) => {...state, query: query}
   | Types.UpdatePlayer(player) => {...state, player: Some(player)}
   | Types.UpdateUser(user) => {...state, user: Some(user)}
+  | Types.UpdateUserList(userList) => {...state, userList: Some(userList)}
   | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
   | Types.UpdateResults(response) => {...state, results: Some(response)}
   | Types.ClearSearch => {...state, query: "", results: None}

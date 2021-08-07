@@ -1,18 +1,16 @@
 module Styles = {
-  open Css
+  open CssJs
 
-  let appContainer = style(list{
+  let appContainer = style(. [
     maxWidth(px(1024)),
     margin2(~v=zero, ~h=auto),
     padding(px(20)),
-    media("(min-width: 640px)", list{padding(px(40))}),
-  })
+    media("(min-width: 640px)", [padding(px(40))]),
+  ])
 
-  let logoutContainer = style(list{})
+  let logoutContainer = style(. [position(absolute), bottom(zero), right(zero), padding(px(16))])
 
-  let infoContainer = style(list{})
-
-  let header = style(list{
+  let header = style(. [
     height(px(60)),
     backgroundColor(Style.Colors.darkerGray),
     width(pct(100.0)),
@@ -21,8 +19,8 @@ module Styles = {
     justifyContent(center),
     alignItems(center),
     position(relative),
-    media("(min-width: 640px)", list{padding2(~v=zero, ~h=px(40))}),
-  })
+    media("(min-width: 640px)", [padding2(~v=zero, ~h=px(40))]),
+  ])
 }
 
 @react.component
@@ -75,6 +73,6 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
       <Now dispatch state /> <Queue socket dispatch state />
     </div>
     <div className=Styles.logoutContainer> <Logout /> </div>
-    <div className=Styles.infoContainer> <Info state /> </div>
+    <UserList dispatch socket state />
   </>
 }
