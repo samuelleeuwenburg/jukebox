@@ -58,7 +58,7 @@ type player = {
 }
 
 type response<'a> = {
-  items: list<'a>,
+  items: array<'a>,
   total: int,
 }
 
@@ -102,7 +102,7 @@ module Decode = {
   let tracks = json => {
     open Json.Decode
     {
-      items: json |> at(list{"tracks", "items"}, list(track)),
+      items: json |> at(list{"tracks", "items"}, array(track)),
       total: json |> at(list{"tracks", "total"}, int),
     }
   }

@@ -238,11 +238,12 @@ let colorList = [
   "rebeccapurple",
 ]
 
-let hash = (username: string) => {
-  let length = username->Js.String2.length
+let fromSpotifyUser = (user: Spotify.user): Types.user => {
+  let input = user.displayName
+  let length = input->Js.String2.length
 
   let adj =
-    username
+    input
     ->Js.String2.slice(~from=0, ~to_=length / 2)
     ->Js.String2.castToArrayLike
     ->Js.Array2.from
@@ -250,7 +251,7 @@ let hash = (username: string) => {
     ->Belt.Array.reduce(1.0, (sum, x) => sum +. x)
 
   let noun =
-    username
+    input
     ->Js.String2.slice(~from=length / 2, ~to_=length)
     ->Js.String2.castToArrayLike
     ->Js.Array2.from
@@ -258,7 +259,7 @@ let hash = (username: string) => {
     ->Belt.Array.reduce(1.0, (sum, x) => sum +. x)
 
   let color =
-    username
+    input
     ->Js.String2.castToArrayLike
     ->Js.Array2.from
     ->Belt.Array.map(Js.String2.charCodeAt(_, 0))
@@ -268,5 +269,8 @@ let hash = (username: string) => {
   let nounPos = mod(noun->Belt.Float.toInt, nounList->Belt.Array.length)->Js.Math.abs_int
   let colorPos = mod(color->Belt.Float.toInt, colorList->Belt.Array.length)->Js.Math.abs_int
 
-  (`${adjList[adjPos]} ${nounList[nounPos]}`, colorList[colorPos])
+  {
+    id: `${adjList[adjPos]} ${nounList[nounPos]}`,
+    color: colorList[colorPos],
+  }
 }

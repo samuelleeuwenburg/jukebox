@@ -31,7 +31,7 @@ let make = (~socket: SocketIO.socket) => {
   // setup tick
   React.useEffect1(() => {
     let tick = () => dispatch(Types.Tick)
-    let intervalId = Js.Global.setInterval(tick, 200)
+    let intervalId = Js.Global.setInterval(tick, 2000)
     Some(() => Js.Global.clearInterval(intervalId))
   }, [dispatch])
 

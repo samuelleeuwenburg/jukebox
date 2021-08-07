@@ -111,8 +111,8 @@ module Styles = {
 
 module Track = {
   @react.component
-  let make = (~socket: SocketIO.socket, ~track: Types.track, ~user: Spotify.user) => {
-    let hasVoted = Belt.List.getBy(track.upvotes, vote => vote === user.id)->Belt.Option.isSome
+  let make = (~socket: SocketIO.socket, ~track: Types.track, ~user: Types.user) => {
+    let hasVoted = Belt.Array.getBy(track.upvotes, vote => vote.id === user.id)->Belt.Option.isSome
 
     let voteTrack = React.useCallback1(() =>
       hasVoted
@@ -140,7 +140,7 @@ module Track = {
         <div className=Styles.column> {React.string(track.name)} </div>
         <div className=Styles.column> {React.string(track.artist)} </div>
       </div>
-      <div className=Styles.addedByColumn> {React.string(track.userId)} </div>
+      <div className=Styles.addedByColumn> {React.string(track.user.id)} </div>
       <div className=Styles.voteColumn>
         <div className={Styles.voteContainer(hasVoted)} onClick={_ => voteTrack()}>
           <span className=Styles.voteIcon>
@@ -164,7 +164,7 @@ module Track = {
             </svg>
           </span>
           <div className=Styles.votes>
-            {React.string(string_of_int(List.length(track.upvotes)))}
+            {React.string(string_of_int(Belt.Array.length(track.upvotes)))}
           </div>
         </div>
       </div>
@@ -181,11 +181,10 @@ let make = (~socket: SocketIO.socket, ~dispatch as _, ~state: Types.state) =>
 
     let trackEls =
       tracks
-      |> List.map(track => <Track key=track.id socket track user />)
-      |> Array.of_list
-      |> React.array
+      ->Belt.Array.map(track => <Track key=track.id socket track user />)
+      ->React.array
 
-    let title = if List.length(tracks) == 0 {
+    let title = if Belt.Array.length(tracks) == 0 {
       <h2 className=Styles.queueTitle> {React.string("Queue is empty")} </h2>
     } else {
       <h2 className=Styles.queueTitle> {React.string("Next in queue")} </h2>

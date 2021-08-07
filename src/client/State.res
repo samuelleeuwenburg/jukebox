@@ -3,13 +3,14 @@ let initialState: Types.state = {
   query: "",
   results: None,
   player: None,
+  spotifyUser: None,
   user: None,
   queue: None,
   currentTrack: None,
   userList: None,
 }
 
-let rec reducer = (state: Types.state, action: Types.action) =>
+let rec reducer = (state: Types.state, action: Types.action) => {
   switch action {
   | Types.NoOp => state
   | Types.Tick =>
@@ -32,6 +33,7 @@ let rec reducer = (state: Types.state, action: Types.action) =>
   | Types.UpdateToken(token) => {...state, token: token}
   | Types.UpdateQuery(query) => {...state, query: query}
   | Types.UpdatePlayer(player) => {...state, player: Some(player)}
+  | Types.UpdateSpotifyUser(user) => {...state, spotifyUser: Some(user)}
   | Types.UpdateUser(user) => {...state, user: Some(user)}
   | Types.UpdateUserList(userList) => {...state, userList: Some(userList)}
   | Types.UpdateQueue(queue) => {...state, queue: Some(queue)}
@@ -59,3 +61,4 @@ let rec reducer = (state: Types.state, action: Types.action) =>
     }
   | Types.Error => state
   }
+}

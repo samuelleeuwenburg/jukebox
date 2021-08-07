@@ -7,17 +7,17 @@ module Path = {
 
 module State = {
   type state = {
-    tracks: list<Types.track>,
+    tracks: array<Types.track>,
     currentTrack: option<Types.currentTrack>,
-    users: Belt.Set.String.t,
+    users: array<Types.user>
   }
 
   type action =
     | PlayTrack(Types.track)
     | AddTrack(Types.track)
-    | AddUser(string)
+    | AddUser(Types.user)
     | RemoveTrack(string)
-    | VoteOnTrack(string, string)
+    | VoteOnTrack(string, Types.user)
     | Tick
 
   type updateFn = (state, action) => state
@@ -35,13 +35,12 @@ module State = {
     (get, set)
   }
 
-  let sortQueue = (tracks: list<Types.track>) => {
-    open List
-    tracks |> sort((a: Types.track, b: Types.track) =>
-      if a.upvotes->length == b.upvotes->length {
+  let sortQueue = (tracks: array<Types.track>) => {
+    tracks->Belt.SortArray.stableSortBy((a: Types.track, b: Types.track) =>
+      if a.upvotes->Belt.Array.length == b.upvotes->Belt.Array.length {
         a.timestamp -. b.timestamp |> int_of_float
       } else {
-        b.upvotes->length - a.upvotes->length
+        b.upvotes->Belt.Array.length - a.upvotes->Belt.Array.length
       }
     )
   }
@@ -80,24 +79,28 @@ module State = {
       }
     | AddUser(user) => {
         ...state,
-        users: state.users->Belt.Set.String.add(user),
+      users: if state.users->Belt.Array.some(u => u.id == user.id) {
+          state.users
+        } else {
+          state.users->Belt.Array.concat([user])
+        }
       }
     | AddTrack(track) => {
         ...state,
-        tracks: list{track, ...state.tracks} |> sortQueue,
+        tracks: state.tracks->Belt.Array.concat([track])->sortQueue,
       }
     | RemoveTrack(trackId) => {
         ...state,
-        tracks: state.tracks |> List.filter((track: Types.track) => track.id != trackId),
+        tracks: state.tracks->Js.Array2.filter((track: Types.track) => track.id != trackId),
       }
     | VoteOnTrack(trackId, user) => {
         ...state,
         tracks: state.tracks
-        |> List.map((track: Types.track) =>
-          if track.id == trackId && track.upvotes->Belt.List.has(user, (a, b) => a == b) {
+        ->Belt.Array.map((track: Types.track) =>
+          if track.id == trackId && track.upvotes->Belt.Array.some(u => u.id == user.id) {
             {
               ...track,
-              upvotes: list{user, ...track.upvotes},
+              upvotes: track.upvotes->Belt.Array.concat([user]),
             }
           } else {
             track
@@ -108,9 +111,9 @@ module State = {
     }
 
   let initialState = {
-    tracks: list{},
+    tracks: [],
     currentTrack: None,
-    users: Belt.Set.String.empty,
+    users: [],
   }
 }
 
@@ -123,29 +126,26 @@ io->SocketIO.Server.on("connect", socket => {
   Js.log("connection received")
 
   socket->SocketIO.on("addUser", (user: Spotify.user) => {
-    Js.log2("user joined: ", user.displayName)
+    let user = user->User.fromSpotifyUser
+    AddUser(user)->dispatch->ignore
+    Js.log2("user joined: ", user.id)
 
-    AddUser(user.displayName)->dispatch->ignore
     let state = getState()
-    let userList = state.users->Belt.Set.String.toArray->Belt.Array.map(User.hash)
-
-    io->SocketIO.Server.emit("newUserList", userList)
+    io->SocketIO.Server.emit("newUserList", state.users)
   })
 
   socket->SocketIO.on("vote", json => {
     let trackId = Json.Decode.field("trackId", Json.Decode.string, json)
-    let user = json->Spotify.Decode.user
+    let user = json->Spotify.Decode.user->User.fromSpotifyUser
     Js.log3("received vote", trackId, user)
 
-    let (user, _) = user.displayName->User.hash
     dispatch(VoteOnTrack(trackId, user))->ignore
-
     let state = getState()
 
     let json = {
       open Json.Encode
       object_(list{
-        ("tracks", state.tracks |> list(Types.Encode.track)),
+        ("tracks", state.tracks |> array(Types.Encode.track)),
         ("currentTrack", nullable(Types.Encode.currentTrack, state.currentTrack)),
       })
     }
@@ -155,12 +155,13 @@ io->SocketIO.Server.on("connect", socket => {
 
   socket->SocketIO.on("addTrack", json => {
     let track = json |> Types.Decode.track
-    let (user, _) = track.userId->User.hash
+    let user = json->Spotify.Decode.user->User.fromSpotifyUser
+
     let track = {
       ...track,
-      userId: user,
+      user: user,
       timestamp: Js.Date.now(),
-      upvotes: list{user},
+      upvotes: [user],
     }
     dispatch(AddTrack(track)) |> ignore
 
@@ -169,7 +170,7 @@ io->SocketIO.Server.on("connect", socket => {
     let json = {
       open Json.Encode
       object_(list{
-        ("tracks", state.tracks |> list(Types.Encode.track)),
+        ("tracks", state.tracks |> array(Types.Encode.track)),
         ("currentTrack", nullable(Types.Encode.currentTrack, state.currentTrack)),
       })
     }
@@ -185,7 +186,7 @@ io->SocketIO.Server.on("connect", socket => {
     let json = {
       open Json.Encode
       object_(list{
-        ("tracks", state.tracks |> list(Types.Encode.track)),
+        ("tracks", state.tracks |> array(Types.Encode.track)),
         ("currentTrack", nullable(Types.Encode.currentTrack, state.currentTrack)),
       })
     }
@@ -212,8 +213,8 @@ server->Http.listen(3000, () => {
 
     switch state.currentTrack {
     | None =>
-      if List.length(state.tracks) != 0 {
-        let track = List.hd(state.tracks)
+      if state.tracks->Belt.Array.length != 0 {
+        let track = state.tracks[0]
         dispatch(RemoveTrack(track.id)) |> ignore
         dispatch(PlayTrack(track)) |> ignore
 
@@ -221,7 +222,7 @@ server->Http.listen(3000, () => {
         let json = {
           open Json.Encode
           object_(list{
-            ("tracks", state.tracks |> list(Types.Encode.track)),
+            ("tracks", state.tracks |> array(Types.Encode.track)),
             ("currentTrack", nullable(Types.Encode.currentTrack, state.currentTrack)),
           })
         }

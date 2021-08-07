@@ -113,7 +113,7 @@ module Styles = {
 
 module Track = {
   @react.component
-  let make = (~dispatch, ~track: Spotify.track, ~user: Spotify.user, ~socket: SocketIO.socket) => {
+  let make = (~dispatch, ~track: Spotify.track, ~user: Types.user, ~socket: SocketIO.socket) => {
     let artist = List.hd(track.artists)
     let image =
       track.album.images
@@ -128,7 +128,7 @@ module Track = {
           ("name", string(track.name)),
           ("artist", string(artist.name)),
           ("uri", string(track.uri)),
-          ("userId", string(user.id)),
+          ("user", Types.Encode.user(user)),
           ("imageUrl", string(image.url)),
           ("durationMs", int(track.durationMs)),
         })
@@ -160,8 +160,6 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
   let searchContainerRef = React.useRef(Js.Nullable.null)
 
   let getTracks = query => {
-    Js.log2(query, "get tracks query")
-
     LocalStorage.setQueryToStorage(query)
 
     switch state.token {
@@ -169,10 +167,16 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
     | Some(token) =>
       {
         open Js.Promise
-        Spotify.getTracks(token, query) |> then_(tracks => {
-          dispatch(Types.UpdateResults(tracks))
-          resolve(tracks)
-        })
+        Spotify.getTracks(token, query)
+          |> then_((tracks: Spotify.response<Spotify.track>) => {
+            Js.log2("res: ", tracks)
+            dispatch(Types.UpdateResults(tracks))
+            resolve(tracks)
+          })
+          |> catch(err => {
+            Js.log2("spotify.getTracks: ", err)
+            reject(Js.Exn.raiseError("foo"))
+            })
       } |> ignore
     }
   }
@@ -247,9 +251,8 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
 
       let results =
         results.items
-        |> List.map(track => <Track key=track.uri socket track user dispatch />)
-        |> Array.of_list
-        |> React.array
+        ->Belt.Array.map(track => <Track key=track.uri socket track user dispatch />)
+        ->React.array
 
       <ul className=Styles.resultsContainer> results </ul>
     })

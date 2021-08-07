@@ -40,7 +40,7 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
 
         Spotify.getUser(token)
         |> Js.Promise.then_(user => {
-          dispatch(Types.UpdateUser(user))
+          dispatch(Types.UpdateSpotifyUser(user))
           Js.Promise.resolve(user)
         })
         |> ignore
