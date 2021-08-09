@@ -1,5 +1,44 @@
 open Webapi.Dom
 
+let getRecentSearchesFromStorage = () =>
+  switch {
+    open Dom.Storage
+    localStorage |> getItem("recent-searches")
+  } {
+  | Some(queries) =>
+    Json.parseOrRaise(queries) |> {
+      open Json.Decode
+      list(string)
+    }
+
+  | None => list{}
+  }
+
+let setQueryToStorage = (query: string) => {
+  let searchQueryArray = [query]
+  let filteredList = List.filter(
+    searchQuery => searchQuery !== query,
+    getRecentSearchesFromStorage(),
+  )
+  let recentQueriesArray = Array.of_list(filteredList)
+  let concatenatedQueries = Array.append(searchQueryArray, recentQueriesArray)
+
+  let slicedArray =
+    Array.length(concatenatedQueries) > 10
+      ? {
+          open Belt
+          Array.slice(concatenatedQueries, ~offset=0, ~len=10)
+        }
+      : concatenatedQueries
+
+  switch Js.Json.stringifyAny(slicedArray) {
+  | Some(stringifiedQueriesArray) =>
+    open Dom.Storage
+    localStorage |> setItem("recent-searches", stringifiedQueriesArray)
+  | None => ()
+  }
+}
+
 module Styles = {
   open Css
 
@@ -146,7 +185,7 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
   let searchContainerRef = React.useRef(Js.Nullable.null)
 
   let getTracks = query => {
-    LocalStorage.setQueryToStorage(query)
+    setQueryToStorage(query)
 
     switch state.token {
     | None => Js.log("search: trying to call `getTracks` without token")
@@ -209,7 +248,7 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
     }
 
     let queries =
-      LocalStorage.getRecentSearchesFromStorage()
+      getRecentSearchesFromStorage()
       |> List.map(query =>
         <div className=Styles.recentSearchQuery key=query onClick={_ => onQueryClick(query)}>
           {React.string(query)}

@@ -13,11 +13,30 @@ let make = (~socket: SocketIO.socket) => {
     Types.UpdateUser(user)->dispatch
   }, [dispatch])
 
-  // get spotify token
-  React.useEffect2(() => {
-    Utils.getToken(url.hash)->Types.UpdateToken->dispatch
+  let handleNewTokens = React.useCallback0((refreshToken, accessToken, expiresIn) => {
+    Js.log4("new tokens -> ", refreshToken, accessToken, expiresIn)
+    Spotify.Token.saveRefresh(refreshToken)
+    Spotify.Token.saveAccess(accessToken, expiresIn)
+  })
+
+  // request spotify refresh tokens after login
+  React.useEffect1(() => {
+    // Utils.getToken(url.hash)->Types.UpdateToken->dispatch
+    open Utils.URLSearchParams
+
+    switch url.search->make->get("code") {
+    | None => ()
+    | Some(code) => socket->SocketIO.emit2("getTokens", Utils.origin, code)
+    }
+
     None
-  }, (url.hash, dispatch))
+  }, [url.search])
+
+  // listen for new refresh tokens
+  React.useEffect1(() => {
+    socket->SocketIO.on3("sendTokens", handleNewTokens)
+    Some(() => socket->SocketIO.off("sendTokens", handleNewTokens))
+  }, [handleNewTokens])
 
   // get initial queue
   React.useEffect0(() => {

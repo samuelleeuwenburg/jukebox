@@ -1,3 +1,9 @@
+// monkeypatch fetch
+%%raw(`
+  const fetch = require('node-fetch');
+  global.fetch = fetch;
+`)
+
 @val external __dirname: string = "__dirname"
 
 module Path = {
@@ -153,6 +159,26 @@ io->SocketIO.Server.on("connect", socket => {
     let state = getState()
     io->SocketIO.Server.emit("newUser", user)
     io->SocketIO.Server.emit("newUserList", state.users)
+  })
+
+  socket->SocketIO.on2("getTokens", (clientURI, code) => {
+    open Js.Promise
+
+    switch Js.Dict.get(Node.Process.process["env"], "CLIENT_SECRET") {
+    | None => Js.log("Request tokens -> no clientSecret found in ENV")
+    | Some(clientSecret) => {
+        Spotify.Token.getRefresh(clientSecret, clientURI, code)
+        |> then_(json => {
+          let data = Spotify.Token.Decode.tokenResponse(json)
+          Js.log2("---> Received tokens -> ", data)
+          socket
+          ->SocketIO.emit3("sendTokens", data.refreshToken, data.accessToken, data.expiresIn)
+          ->resolve
+        })
+        |> ignore
+        Js.log2("Request tokens -> ", clientURI)
+      }
+    }
   })
 
   socket->SocketIO.on("vote", json => {
