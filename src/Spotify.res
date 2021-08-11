@@ -37,9 +37,52 @@ module Token = {
     goToUrl(url)
   }
 
-  let get = () => {
+  let getNewAccessToken = (clientSecret, refreshToken) => {
+    open Utils
     open Js.Promise
-    resolve("")
+
+    let payload =
+      "grant_type=refresh_token" ++
+      "&client_id=" ++
+      encodeURIComponent(clientId) ++
+      "&client_secret=" ++
+      encodeURIComponent(clientSecret) ++
+      "&refresh_token=" ++
+      refreshToken
+
+    Fetch.fetchWithInit(
+      "https://accounts.spotify.com/api/token",
+      Fetch.RequestInit.make(
+        ~method_=Post,
+        ~body=Fetch.BodyInit.make(payload),
+        ~headers=Fetch.HeadersInit.make({
+          "Content-Type": "application/x-www-form-urlencoded",
+        }),
+        (),
+      ),
+    ) |> then_(Fetch.Response.json)
+  }
+
+  let get = socket => {
+    open Dom.Storage
+
+    let expiresAt =
+      getItem("expires_at", localStorage)->Belt.Option.flatMap(s => s->Belt.Float.fromString)
+
+    switch (
+      expiresAt,
+      getItem("access_token", localStorage),
+      getItem("refresh_token", localStorage),
+    ) {
+    | (Some(expiresAt), Some(accessToken), Some(refreshToken)) => {
+        if Js.Date.now() >= expiresAt {
+          socket->SocketIO.emit("requestNewAccessToken", refreshToken)
+        }
+
+        Some(accessToken)
+      }
+    | _ => None
+    }
   }
 
   let getRefresh = (clientSecret, clientURI, code) => {
@@ -71,13 +114,22 @@ module Token = {
   }
 
   let saveRefresh = token => {
-    //@TODO: save to localstorage
-    ()
+    open Dom.Storage
+    localStorage |> setItem("refresh_token", token)
   }
 
   let saveAccess = (token, expiresIn) => {
-    //@TODO: save to localstorage
-    ()
+    open Dom.Storage
+    let expireDate = Belt.Int.toFloat(expiresIn) *. 1000.0 +. Js.Date.now()
+    localStorage |> setItem("access_token", token)
+    localStorage |> setItem("expires_at", expireDate->Belt.Float.toString)
+  }
+
+  let clear = () => {
+    open Dom.Storage
+    localStorage |> removeItem("access_token")
+    localStorage |> removeItem("refresh_token")
+    localStorage |> removeItem("expires_at")
   }
 }
 

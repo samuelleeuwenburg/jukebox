@@ -1,5 +1,4 @@
 let initialState: Types.state = {
-  token: None,
   query: "",
   results: None,
   player: None,
@@ -30,7 +29,6 @@ let rec reducer = (state: Types.state, action: Types.action) => {
       }
     })
     ->Belt.Option.getWithDefault(state)
-  | Types.UpdateToken(token) => {...state, token: token}
   | Types.UpdateQuery(query) => {...state, query: query}
   | Types.UpdatePlayer(player) => {...state, player: Some(player)}
   | Types.UpdateSpotifyUser(user) => {...state, spotifyUser: Some(user)}

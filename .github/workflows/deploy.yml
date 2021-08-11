@@ -36,6 +36,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.PORT }}
           script: |
+	    export CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
             cd ${{ secrets.REMOTE_DIR }}
             pm2 stop 'jukebox'
             pm2 start ./src/server/Server.bs.js --name 'jukebox'

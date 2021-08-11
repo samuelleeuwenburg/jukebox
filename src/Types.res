@@ -22,7 +22,6 @@ type now = {
 }
 
 type state = {
-  token: option<string>,
   query: string,
   results: option<Spotify.response<Spotify.track>>,
   player: option<Spotify.player>,
@@ -43,7 +42,6 @@ type action =
   | UpdateUser(user)
   | UpdateQueue(array<track>)
   | UpdateCurrentTrack(currentTrack)
-  | UpdateToken(option<string>)
   | UpdateUserList(array<user>)
   | HandleNow(now)
   | ClearSearch

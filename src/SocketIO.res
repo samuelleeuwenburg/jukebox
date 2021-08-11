@@ -3,8 +3,8 @@ type conn = {id: string}
 type socket = {conn: conn}
 
 @send external on: (socket, string, 'a => unit) => unit = "on"
-@send external on2: (socket, string, ('a, 'b) => unit) => unit = "on"
-@send external on3: (socket, string, ('a, 'b, 'c) => unit) => unit = "on"
+@send external on2: (socket, string, (. 'a, 'b) => unit) => unit = "on"
+@send external on3: (socket, string, (. 'a, 'b, 'c) => unit) => unit = "on"
 
 @send external off: (socket, string, 'a) => unit = "off"
 
@@ -18,6 +18,8 @@ module Server = {
   @module("socket.io") @new external server: Http.t => server = "Server"
   @send external on: (server, string, socket => unit) => unit = "on"
   @send external emit: (server, string, 'a) => unit = "emit"
+  @send external emit2: (server, string, 'a, 'b) => unit = "emit"
+  @send external emit3: (server, string, 'a, 'b, 'c) => unit = "emit"
 }
 
 module Client = {

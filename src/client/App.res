@@ -1,27 +1,40 @@
 @react.component
 let make = (~socket: SocketIO.socket) => {
   let (state, dispatch) = React.useReducer(State.reducer, State.initialState)
+  let (refreshToken, setRefreshToken) = React.useState(_ =>
+    Dom.Storage.localStorage |> Dom.Storage.getItem("refresh_token")
+  )
   let url = RescriptReactRouter.useUrl()
 
   let handleNewQueue = React.useCallback1(json => {
     let now = Types.Decode.now(json)
+    Js.log2("new queue -> ", json)
     Types.HandleNow(now)->dispatch
   }, [dispatch])
 
   let handleNewUser = React.useCallback1(json => {
     let user = Types.Decode.user(json)
+    Js.log2("new user -> ", user)
     Types.UpdateUser(user)->dispatch
   }, [dispatch])
 
-  let handleNewTokens = React.useCallback0((refreshToken, accessToken, expiresIn) => {
-    Js.log4("new tokens -> ", refreshToken, accessToken, expiresIn)
+  let handleNewAccessToken = (. accessToken, expiresIn) => {
+    Js.log2("new access token -> ", accessToken)
+    Spotify.Token.saveAccess(accessToken, expiresIn)
+  }
+
+  let handleNewTokens = (. refreshToken, accessToken, expiresIn) => {
+    Js.log2("new refresh token -> ", refreshToken)
+    setRefreshToken(_ => Some(refreshToken))
     Spotify.Token.saveRefresh(refreshToken)
     Spotify.Token.saveAccess(accessToken, expiresIn)
-  })
+
+    // clear url
+    Utils.pushState(Js.Obj.empty(), "", "/")
+  }
 
   // request spotify refresh tokens after login
   React.useEffect1(() => {
-    // Utils.getToken(url.hash)->Types.UpdateToken->dispatch
     open Utils.URLSearchParams
 
     switch url.search->make->get("code") {
@@ -36,6 +49,12 @@ let make = (~socket: SocketIO.socket) => {
   React.useEffect1(() => {
     socket->SocketIO.on3("sendTokens", handleNewTokens)
     Some(() => socket->SocketIO.off("sendTokens", handleNewTokens))
+  }, [handleNewTokens])
+
+  // listen for new access token
+  React.useEffect1(() => {
+    socket->SocketIO.on2("sendNewAccessToken", handleNewAccessToken)
+    Some(() => socket->SocketIO.off("sendTokens", handleNewAccessToken))
   }, [handleNewTokens])
 
   // get initial queue
@@ -72,7 +91,7 @@ let make = (~socket: SocketIO.socket) => {
     Some(() => Js.Global.clearInterval(intervalId))
   }, [dispatch])
 
-  switch state.token {
+  switch refreshToken {
   | None => <Login />
   | Some(_) => <Player dispatch state socket />
   }

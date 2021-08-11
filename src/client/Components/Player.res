@@ -28,8 +28,8 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
   let (currentTrack, setCurrentTrack) = React.useState(() => state.currentTrack)
 
   // get Spotify data
-  React.useEffect1(() => {
-    switch state.token {
+  React.useEffect0(() => {
+    switch Spotify.Token.get(socket) {
     | Some(token) => {
         Spotify.getPlayer(token)
         |> Js.Promise.then_(player => {
@@ -49,10 +49,10 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
     }
 
     None
-  }, [state.token])
+  })
 
-  React.useEffect2(() => {
-    switch (state.token, state.currentTrack, currentTrack) {
+  React.useEffect1(() => {
+    switch (Spotify.Token.get(socket), state.currentTrack, currentTrack) {
     | (Some(token), Some(server), Some(local)) =>
       if local.track.track.id !== server.track.track.id {
         Spotify.playTrack(token, server.track.track.uri, 0.0)->ignore
@@ -65,7 +65,7 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
     | _ => ()
     }
     None
-  }, (state.token, state.currentTrack))
+  }, [state.currentTrack])
 
   <>
     <div className=Styles.header> <Search socket dispatch state /> </div>
