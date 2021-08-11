@@ -1,22 +1,136 @@
-@scope(("window", "location")) @val external origin: string = "origin"
-
 let baseUrl = "https://api.spotify.com/v1"
 let clientId = "4f8a771ca0aa41b28424ad9fc737dacc"
 let scopes = "user-modify-playback-state user-read-playback-state user-read-private user-read-email"
 
-let authenticate = () => {
-  open Utils
+module Token = {
+  type tokenResponse = {
+    accessToken: string,
+    refreshToken: string,
+    expiresIn: int,
+  }
 
-  let url =
-    "https://accounts.spotify.com/authorize" ++
-    ("?response_type=token" ++
-    ("&client_id=" ++
-    (encodeURIComponent(clientId) ++
-    ("&scope=" ++
-    (encodeURIComponent(scopes) ++
-    ("&redirect_uri=" ++ (encodeURIComponent(origin) ++ "&state=abcdefg")))))))
+  module Decode = {
+    open Json.Decode
 
-  goToUrl(url)
+    let tokenResponse = json => {
+      {
+        accessToken: json |> field("access_token", string),
+        refreshToken: json |> field("refresh_token", string),
+        expiresIn: json |> field("expires_in", int),
+      }
+    }
+  }
+
+  let authenticate = () => {
+    open Utils
+
+    let url =
+      "https://accounts.spotify.com/authorize" ++
+      "?response_type=code" ++
+      "&client_id=" ++
+      encodeURIComponent(clientId) ++
+      "&scope=" ++
+      encodeURIComponent(scopes) ++
+      "&redirect_uri=" ++
+      encodeURIComponent(origin) ++ "&state=abcdefg"
+
+    goToUrl(url)
+  }
+
+  let getNewAccessToken = (clientSecret, refreshToken) => {
+    open Utils
+    open Js.Promise
+
+    let payload =
+      "grant_type=refresh_token" ++
+      "&client_id=" ++
+      encodeURIComponent(clientId) ++
+      "&client_secret=" ++
+      encodeURIComponent(clientSecret) ++
+      "&refresh_token=" ++
+      refreshToken
+
+    Fetch.fetchWithInit(
+      "https://accounts.spotify.com/api/token",
+      Fetch.RequestInit.make(
+        ~method_=Post,
+        ~body=Fetch.BodyInit.make(payload),
+        ~headers=Fetch.HeadersInit.make({
+          "Content-Type": "application/x-www-form-urlencoded",
+        }),
+        (),
+      ),
+    ) |> then_(Fetch.Response.json)
+  }
+
+  let get = socket => {
+    open Dom.Storage
+
+    let expiresAt =
+      getItem("expires_at", localStorage)->Belt.Option.flatMap(s => s->Belt.Float.fromString)
+
+    switch (
+      expiresAt,
+      getItem("access_token", localStorage),
+      getItem("refresh_token", localStorage),
+    ) {
+    | (Some(expiresAt), Some(accessToken), Some(refreshToken)) => {
+        if Js.Date.now() >= expiresAt {
+          socket->SocketIO.emit("requestNewAccessToken", refreshToken)
+        }
+
+        Some(accessToken)
+      }
+    | _ => None
+    }
+  }
+
+  let getRefresh = (clientSecret, clientURI, code) => {
+    open Utils
+    open Js.Promise
+
+    let payload =
+      "grant_type=authorization_code" ++
+      "&client_id=" ++
+      encodeURIComponent(clientId) ++
+      "&client_secret=" ++
+      encodeURIComponent(clientSecret) ++
+      "&code=" ++
+      encodeURIComponent(code) ++
+      "&redirect_uri=" ++
+      encodeURIComponent(clientURI)
+
+    Fetch.fetchWithInit(
+      "https://accounts.spotify.com/api/token",
+      Fetch.RequestInit.make(
+        ~method_=Post,
+        ~body=Fetch.BodyInit.make(payload),
+        ~headers=Fetch.HeadersInit.make({
+          "Content-Type": "application/x-www-form-urlencoded",
+        }),
+        (),
+      ),
+    ) |> then_(Fetch.Response.json)
+  }
+
+  let saveRefresh = token => {
+    open Dom.Storage
+    localStorage |> setItem("refresh_token", token)
+  }
+
+  let saveAccess = (token, expiresIn) => {
+    open Dom.Storage
+    let expireDate = Belt.Int.toFloat(expiresIn) *. 1000.0 +. Js.Date.now()
+    localStorage |> setItem("access_token", token)
+    localStorage |> setItem("expires_at", expireDate->Belt.Float.toString)
+  }
+
+  let clear = () => {
+    open Dom.Storage
+    localStorage |> removeItem("access_token")
+    localStorage |> removeItem("refresh_token")
+    localStorage |> removeItem("expires_at")
+  }
 }
 
 type user = {

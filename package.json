@@ -8,7 +8,7 @@
     "res:format": "rescript format -all",
     "webpack:build": "webpack --mode=production",
     "webpack:watch": "webpack --mode=development --watch",
-    "server:watch": "nodemon src/server/Server.bs.js",
+    "server:watch": "source ./.env && nodemon src/server/Server.bs.js",
     "start": "node src/server/Server.bs.js",
     "clean": "rm -f public/client.js && npm run res:clean",
     "build": "npm run clean && npm run res:build && npm run webpack:build"
@@ -28,6 +28,7 @@
     "bs-fetch": "^0.6.2",
     "bs-platform": "^8.3.3",
     "bs-webapi": "^0.19.1",
+    "node-fetch": "^2.6.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "rescript": "^9.1.4",

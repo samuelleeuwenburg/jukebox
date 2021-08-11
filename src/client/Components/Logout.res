@@ -1,7 +1,7 @@
 @react.component
 let make = () => {
   let logout = () => {
-    Utils.clearToken()
+    Spotify.Token.clear()
     Utils.goToUrl("/")
   }
   <button onClick={_event => logout()}> {React.string("logout")} </button>

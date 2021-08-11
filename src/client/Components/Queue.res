@@ -75,7 +75,6 @@ module Styles = {
   let voteContainer = hasVoted =>
     style(list{
       cursor(hasVoted ? #default : #pointer),
-      pointerEvents(hasVoted ? #none : #auto),
       selector("& path", list{SVG.fill(hasVoted ? Style.Colors.lightestGray : #transparent)}),
     })
 
@@ -119,22 +118,11 @@ module Track = {
   ) => {
     let hasVoted = Belt.Array.getBy(track.upvotes, vote => vote.id === user.id)->Belt.Option.isSome
     let image = track.track->Spotify.Track.getImage
-    let voteTrack = React.useCallback1(() =>
-      hasVoted
-        ? ()
-        : {
-            let json = {
-              open Json.Encode
-              object_(list{
-                ("trackId", string(track.track.id)),
-                ("user", spotifyUser->Spotify.Encode.user),
-              })
-            }
-
-            socket->SocketIO.emit("vote", json) |> ignore
-            ()
-          }
-    , [hasVoted])
+    let voteTrack = React.useCallback1(() => {
+      if !hasVoted {
+        socket->SocketIO.emit2("vote", spotifyUser, track.track.id) |> ignore
+      }
+    }, [hasVoted])
 
     <li className=Styles.trackContainer>
       <div

@@ -1,3 +1,9 @@
+// monkeypatch fetch
+%%raw(`
+  const fetch = require('node-fetch');
+  global.fetch = fetch;
+`)
+
 @val external __dirname: string = "__dirname"
 
 module Path = {
@@ -155,9 +161,45 @@ io->SocketIO.Server.on("connect", socket => {
     io->SocketIO.Server.emit("newUserList", state.users)
   })
 
-  socket->SocketIO.on("vote", json => {
-    let trackId = Json.Decode.field("trackId", Json.Decode.string, json)
-    let user = Json.Decode.field("user", Spotify.Decode.user, json)->User.fromSpotifyUser
+  socket->SocketIO.on("requestNewAccessToken", refreshToken => {
+    Js.log2("Request new access token -> ", refreshToken)
+    switch Js.Dict.get(Node.Process.process["env"], "CLIENT_SECRET") {
+    | None => Js.log("Request new access token -> no clientSecret found in ENV")
+    | Some(clientSecret) => {
+        Spotify.Token.getNewAccessToken(clientSecret, refreshToken)
+        |> Js.Promise.then_(json => {
+          let token = Json.Decode.field("access_token", Json.Decode.string, json)
+          let expiresIn = Json.Decode.field("expires_in", Json.Decode.int, json)
+          socket->SocketIO.emit2("sendNewAccessToken", token, expiresIn)
+          Js.Promise.resolve(token)
+        })
+        |> ignore
+        ()
+      }
+    }
+  })
+
+  socket->SocketIO.on2("getTokens", (. clientURI, code) => {
+    open Js.Promise
+
+    switch Js.Dict.get(Node.Process.process["env"], "CLIENT_SECRET") {
+    | None => Js.log("Request tokens -> no clientSecret found in ENV")
+    | Some(clientSecret) => {
+        Js.log2("Request tokens -> ", clientURI)
+        Spotify.Token.getRefresh(clientSecret, clientURI, code)
+        |> then_(json => {
+          let data = Spotify.Token.Decode.tokenResponse(json)
+          Js.log2("---> Received tokens -> ", data)
+          socket->SocketIO.emit3("sendTokens", data.refreshToken, data.accessToken, data.expiresIn)
+          resolve()
+        })
+        |> ignore
+      }
+    }
+  })
+
+  socket->SocketIO.on2("vote", (. user, trackId) => {
+    let user = user->User.fromSpotifyUser
     Js.log3("Received vote -> ", trackId, user)
 
     dispatch(VoteOnTrack(trackId, user))->ignore
@@ -174,10 +216,9 @@ io->SocketIO.Server.on("connect", socket => {
     io->SocketIO.Server.emit("newQueue", json)
   })
 
-  socket->SocketIO.on("addTrack", json => {
-    let user = Json.Decode.field("user", Spotify.Decode.user, json)->User.fromSpotifyUser
-    let track =
-      Json.Decode.field("track", Spotify.Decode.track, json)->Types.Track.fromSpotifyTrack(user)
+  socket->SocketIO.on2("addTrack", (. user, track) => {
+    let user = user->User.fromSpotifyUser
+    let track = track->Types.Track.fromSpotifyTrack(user)
 
     dispatch(AddTrack(track)) |> ignore
 
