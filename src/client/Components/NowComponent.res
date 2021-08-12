@@ -98,14 +98,14 @@ module Styles = {
 
 module Controls = {
   @react.component
-  let make = (~state: Types.state) =>
+  let make = (~state: ClientState.state) =>
     <div className=Styles.devicesContainer>
       <div className={Styles.deviceIcon(state.player)} />
     </div>
 }
 
 @react.component
-let make = (~dispatch as _, ~state: Types.state) =>
+let make = (~dispatch as _, ~state: ClientState.state) =>
   state.currentTrack
   ->Belt.Option.map(currentTrack => {
     let fraction = currentTrack.position /. float_of_int(currentTrack.track.track.durationMs)

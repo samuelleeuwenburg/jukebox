@@ -24,7 +24,7 @@ module Styles = {
 }
 
 @react.component
-let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
+let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
   let (currentTrack, setCurrentTrack) = React.useState(() => state.currentTrack)
 
   // get Spotify data
@@ -33,14 +33,14 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
     | Some(token) => {
         Spotify.getPlayer(token)
         |> Js.Promise.then_(player => {
-          dispatch(Types.UpdatePlayer(player))
+          dispatch(ClientState.UpdatePlayer(player))
           Js.Promise.resolve(player)
         })
         |> ignore
 
         Spotify.getUser(token)
         |> Js.Promise.then_(user => {
-          dispatch(Types.UpdateSpotifyUser(user))
+          dispatch(ClientState.UpdateSpotifyUser(user))
           Js.Promise.resolve(user)
         })
         |> ignore
@@ -68,11 +68,11 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
   }, [state.currentTrack])
 
   <>
-    <div className=Styles.header> <Search socket dispatch state /> </div>
+    <div className=Styles.header> <SearchComponent socket dispatch state /> </div>
     <div className=Styles.appContainer>
-      <Now dispatch state /> <Queue socket dispatch state />
+      <NowComponent dispatch state /> <QueueComponent socket dispatch state />
     </div>
-    <div className=Styles.logoutContainer> <Logout /> </div>
-    <UserList dispatch socket state />
+    <div className=Styles.logoutContainer> <LogoutComponent /> </div>
+    <UserListComponent dispatch socket state />
   </>
 }

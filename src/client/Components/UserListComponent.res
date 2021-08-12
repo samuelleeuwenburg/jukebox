@@ -11,15 +11,15 @@ module Styles = {
 }
 
 @react.component
-let make = (~dispatch, ~socket: SocketIO.socket, ~state: Types.state) => {
+let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
   let handleNewUserList = React.useCallback1((userList: array<Types.user>) => {
-    Types.UpdateUserList(userList)->dispatch
+    ClientState.UpdateUserList(userList)->dispatch
   }, [dispatch])
 
   // listen for new user list
   React.useEffect1(() => {
-    socket->SocketIO.on("newUserList", handleNewUserList)
-    Some(() => socket->SocketIO.off("newUserList", handleNewUserList))
+    socket->SocketIO.on(Types.Socket.SendUserList, handleNewUserList)
+    Some(() => socket->SocketIO.off(Types.Socket.SendUserList, handleNewUserList))
   }, [handleNewUserList])
 
   let content = switch state.userList {

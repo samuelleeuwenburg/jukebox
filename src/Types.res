@@ -21,31 +21,16 @@ type now = {
   currentTrack: option<currentTrack>,
 }
 
-type state = {
-  query: string,
-  results: option<Spotify.response<Spotify.track>>,
-  player: option<Spotify.player>,
-  spotifyUser: option<Spotify.user>,
-  user: option<user>,
-  queue: option<array<track>>,
-  currentTrack: option<currentTrack>,
-  userList: option<array<user>>,
-}
+module Log = {
+  type t = {
+    message: string,
+    timestamp: float,
+  }
 
-type action =
-  | NoOp
-  | Tick
-  | UpdateQuery(string)
-  | UpdateResults(Spotify.response<Spotify.track>)
-  | UpdatePlayer(Spotify.player)
-  | UpdateSpotifyUser(Spotify.user)
-  | UpdateUser(user)
-  | UpdateQueue(array<track>)
-  | UpdateCurrentTrack(currentTrack)
-  | UpdateUserList(array<user>)
-  | HandleNow(now)
-  | ClearSearch
-  | Error
+  let make = message => {
+    {message: message, timestamp: Js.Date.now()}
+  }
+}
 
 module Encode = {
   open Json
@@ -116,4 +101,20 @@ module Track = {
       upvotes: [user],
     }
   }
+}
+
+module Socket = {
+  type t =
+    | SendLog
+    | RequestUser
+    | SendUser
+    | SendUserList
+    | RequestRefreshToken
+    | SendRefreshToken
+    | RequestAccessToken
+    | SendAccessToken
+    | RequestQueue
+    | SendQueue
+    | TrackAdd
+    | TrackVote
 }

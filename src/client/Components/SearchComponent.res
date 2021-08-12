@@ -157,8 +157,8 @@ module Track = {
     let image = track->Spotify.Track.getImage
 
     let addTrack = React.useCallback0(() => {
-      dispatch(Types.ClearSearch)
-      socket->SocketIO.emit2("addTrack", user, track) |> ignore
+      dispatch(ClientState.ClearSearch)
+      socket->SocketIO.emit2(Types.Socket.TrackAdd, user, track) |> ignore
     })
 
     <li className=Styles.trackContainer onClick={_ => addTrack()}>
@@ -175,7 +175,7 @@ module Track = {
 }
 
 @react.component
-let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
+let make = (~socket: SocketIO.socket, ~dispatch, ~state: ClientState.state) => {
   let (showSearch, setShowSearch) = React.useState(() => false)
   let searchContainerRef = React.useRef(Js.Nullable.null)
 
@@ -188,7 +188,7 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
       {
         open Js.Promise
         Spotify.getTracks(token, query) |> then_((tracks: Spotify.response<Spotify.track>) => {
-          dispatch(Types.UpdateResults(tracks))
+          dispatch(ClientState.UpdateResults(tracks))
           resolve(tracks)
         })
       } |> ignore
@@ -199,9 +199,9 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
 
   let onChanges = (value: string) =>
     if value === "" {
-      dispatch(Types.ClearSearch) |> ignore
+      dispatch(ClientState.ClearSearch) |> ignore
     } else {
-      dispatch(Types.UpdateQuery(value)) |> ignore
+      dispatch(ClientState.UpdateQuery(value)) |> ignore
       debouncedGetTracks(value)
     }
 
@@ -210,7 +210,7 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
   let closeRecentSearches = () => setShowSearch(_ => false)
 
   let closeSearch = () => {
-    dispatch(Types.ClearSearch)
+    dispatch(ClientState.ClearSearch)
     closeRecentSearches()
   }
 
@@ -237,7 +237,7 @@ let make = (~socket: SocketIO.socket, ~dispatch, ~state: Types.state) => {
 
   let recentSearches = {
     let onQueryClick = (query: string) => {
-      dispatch(Types.UpdateQuery(query))
+      dispatch(ClientState.UpdateQuery(query))
       getTracks(query)
     }
 
