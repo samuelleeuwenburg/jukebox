@@ -111,7 +111,7 @@ module State = {
     | VoteOnTrack(trackId, user) => {
         ...state,
         tracks: state.tracks->Belt.Array.map((track: Types.track) =>
-          if track.track.id == trackId && track.upvotes->Belt.Array.some(u => u.id == user.id) {
+          if track.track.id == trackId && track.upvotes->Belt.Array.some(u => u.id != user.id) {
             {
               ...track,
               upvotes: track.upvotes->Belt.Array.concat([user]),
