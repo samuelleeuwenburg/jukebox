@@ -157,7 +157,7 @@ io->SocketIO.Server.on("connect", socket => {
     Js.log2("User joined -> ", user)
 
     let state = getState()
-    io->SocketIO.Server.emit("newUser", user)
+    socket->SocketIO.emit("newUser", user)
     io->SocketIO.Server.emit("newUserList", state.users)
   })
 
