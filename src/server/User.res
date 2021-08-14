@@ -276,8 +276,10 @@ module Conn = {
     socket->SocketIO.on("disconnect", () => {
       switch userRef.contents {
       | Some(user) => {
-          let state: ServerState.state = ServerState.RemoveUser(user)->dispatch
+          ServerState.RemoveUser(user)->dispatch->ignore
+          let state: ServerState.state = ServerState.log(Types.Log.UserLeft(user))->dispatch
           io->SocketIO.Server.emit(Types.Socket.SendUserList, state.users)
+          io->SocketIO.Server.emit(Types.Socket.SendLog, state.log)
         }
       | None => ()
       }
@@ -287,8 +289,8 @@ module Conn = {
       let user = user->fromSpotifyUser
       userRef := Some(user)
 
-      let state: ServerState.state = ServerState.AddUser(user)->dispatch
-      ServerState.log(`user joined: ${user.id}`)->dispatch->ignore
+      ServerState.AddUser(user)->dispatch->ignore
+      let state: ServerState.state = ServerState.log(Types.Log.UserJoined(user))->dispatch
 
       socket->SocketIO.emit(Types.Socket.SendUser, user)
 

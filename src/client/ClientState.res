@@ -7,11 +7,13 @@ type state = {
   queue: option<array<Types.track>>,
   currentTrack: option<Types.currentTrack>,
   userList: option<array<Types.user>>,
+  log: option<array<Types.Log.t>>,
 }
 
 type action =
   | NoOp
   | Tick
+  | UpdateLog(array<Types.Log.t>)
   | UpdateQuery(string)
   | UpdateResults(Spotify.response<Spotify.track>)
   | UpdatePlayer(Spotify.player)
@@ -33,6 +35,7 @@ let initialState: state = {
   queue: None,
   currentTrack: None,
   userList: None,
+  log: None,
 }
 
 let rec reducer = (state: state, action: action) => {
@@ -55,6 +58,7 @@ let rec reducer = (state: state, action: action) => {
       }
     })
     ->Belt.Option.getWithDefault(state)
+  | UpdateLog(log) => {...state, log: Some(log)}
   | UpdateQuery(query) => {...state, query: query}
   | UpdatePlayer(player) => {...state, player: Some(player)}
   | UpdateSpotifyUser(user) => {...state, spotifyUser: Some(user)}

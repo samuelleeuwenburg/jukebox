@@ -22,8 +22,14 @@ type now = {
 }
 
 module Log = {
+  type message =
+    | UserJoined(user)
+    | UserLeft(user)
+    | TrackAdded(track, user)
+    | TrackVoted(track, user)
+
   type t = {
-    message: string,
+    message: message,
     timestamp: float,
   }
 

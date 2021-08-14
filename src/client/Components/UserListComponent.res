@@ -1,9 +1,17 @@
+module User = {
+  @react.component
+  let make = (~user: Types.user) => {
+    <span style={ReactDOM.Style.make(~color=user.color, ())}> {React.string(user.id)} </span>
+  }
+}
+
 module Styles = {
   open CssJs
 
   let wrapper = style(. [
     position(absolute),
-    left(zero),
+    zIndex(4),
+    right(zero),
     bottom(zero),
     padding(px(16)),
     lineHeight(px(22)),
@@ -27,9 +35,7 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
   | Some(userList) =>
     userList
     ->Belt.Array.map(user => {
-      <div key={user.id} style={ReactDOM.Style.make(~color=user.color, ())}>
-        {React.string(user.id)}
-      </div>
+      <div key={user.id}> <User user /> </div>
     })
     ->React.array
   }

@@ -8,7 +8,7 @@ module Styles = {
     media("(min-width: 640px)", [padding(px(40))]),
   ])
 
-  let logoutContainer = style(. [position(absolute), bottom(zero), right(zero), padding(px(16))])
+  let logoutContainer = style(. [position(absolute), top(zero), right(zero), padding(px(16))])
 
   let header = style(. [
     height(px(60)),
@@ -74,5 +74,6 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
     </div>
     <div className=Styles.logoutContainer> <LogoutComponent /> </div>
     <UserListComponent dispatch socket state />
+    <LogComponent dispatch socket state />
   </>
 }

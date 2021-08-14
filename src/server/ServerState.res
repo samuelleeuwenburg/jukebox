@@ -11,7 +11,7 @@ type action =
   | AddUser(Types.user)
   | RemoveUser(Types.user)
   | RemoveTrack(string)
-  | VoteOnTrack(string, Types.user)
+  | VoteOnTrack(Types.track, Types.user)
   | Log(Types.Log.t)
   | Tick
 
@@ -77,7 +77,11 @@ let update = (state: state, action: action) =>
     }
   | Log(log) => {
       ...state,
-      log: state.log->Belt.Array.concat([log]),
+      log: if state.log->Belt.Array.size > 100 {
+        state.log->Belt.Array.concat([log])->Belt.Array.sliceToEnd(1)
+      } else {
+        state.log->Belt.Array.concat([log])
+      },
     }
   | PlayTrack(track) => {
       ...state,
@@ -111,10 +115,10 @@ let update = (state: state, action: action) =>
       ...state,
       tracks: state.tracks->Js.Array2.filter((track: Types.track) => track.track.id != trackId),
     }
-  | VoteOnTrack(trackId, user) => {
+  | VoteOnTrack(track, user) => {
       ...state,
-      tracks: state.tracks->Belt.Array.map((track: Types.track) =>
-        if track.track.id == trackId && track.upvotes->Belt.Array.some(u => u.id != user.id) {
+      tracks: state.tracks->Belt.Array.map((t: Types.track) =>
+        if t.track.id == track.track.id && t.upvotes->Belt.Array.some(u => u.id != user.id) {
           {
             ...track,
             upvotes: track.upvotes->Belt.Array.concat([user]),

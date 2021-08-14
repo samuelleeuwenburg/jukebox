@@ -1,9 +1,10 @@
 module Conn = {
   let handle = (io, socket, getState, dispatch) => {
-    socket->SocketIO.on2(Types.Socket.TrackVote, (. user, trackId) => {
+    socket->SocketIO.on2(Types.Socket.TrackVote, (. user, track) => {
       let user = user->User.fromSpotifyUser
 
-      let state: ServerState.state = ServerState.VoteOnTrack(trackId, user)->dispatch
+      ServerState.VoteOnTrack(track, user)->dispatch->ignore
+      let state: ServerState.state = ServerState.log(Types.Log.TrackVoted(track, user))->dispatch
 
       let json = {
         open Json.Encode
@@ -14,13 +15,15 @@ module Conn = {
       }
 
       io->SocketIO.Server.emit(Types.Socket.SendQueue, json)
+      io->SocketIO.Server.emit(Types.Socket.SendLog, state.log)
     })
 
     socket->SocketIO.on2(Types.Socket.TrackAdd, (. user, track) => {
       let user = user->User.fromSpotifyUser
       let track = track->Types.Track.fromSpotifyTrack(user)
 
-      let state = ServerState.AddTrack(track)->dispatch
+      ServerState.AddTrack(track)->dispatch->ignore
+      let state = ServerState.log(Types.Log.TrackAdded(track, user))->dispatch
 
       let json = {
         open Json.Encode
@@ -31,6 +34,7 @@ module Conn = {
       }
 
       io->SocketIO.Server.emit(Types.Socket.SendQueue, json)
+      io->SocketIO.Server.emit(Types.Socket.SendLog, state.log)
     })
 
     socket->SocketIO.on(Types.Socket.RequestQueue, _ => {

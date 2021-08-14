@@ -3,9 +3,12 @@ module Styles = {
 
   let error = style(list{color(Style.Colors.error), fontWeight(bold)})
   let tracksContainer = style(list{
-    height(#calc(#sub, vh(100.0), px(450))),
+    position(relative),
+    zIndex(2),
+    backgroundColor(Style.Colors.darkestGray),
+    maxHeight(#calc(#sub, vh(100.0), px(520))),
     overflowX(auto),
-    media("(min-width: 640px)", list{height(#calc(#sub, vh(100.0), px(440)))}),
+    media("(min-width: 640px)", list{maxHeight(#calc(#sub, vh(100.0), px(520)))}),
   })
 
   let trackContainer = style(list{
@@ -120,7 +123,7 @@ module Track = {
     let image = track.track->Spotify.Track.getImage
     let voteTrack = React.useCallback1(() => {
       if !hasVoted {
-        socket->SocketIO.emit2(Types.Socket.TrackVote, spotifyUser, track.track.id) |> ignore
+        socket->SocketIO.emit2(Types.Socket.TrackVote, spotifyUser, track) |> ignore
       }
     }, [hasVoted])
 
