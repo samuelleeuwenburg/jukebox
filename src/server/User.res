@@ -1,10 +1,7 @@
 module Hash = {
   let adjList = [
-    "running",
-    "fighting",
     "crying",
     "levitating",
-    "meditating",
     "sleeping",
     "snoring",
     "skating",
@@ -27,7 +24,6 @@ module Hash = {
     "unusual",
     "reasonable",
     "lucky",
-    "weak",
     "suspicious",
     "complex",
     "slow",
@@ -64,6 +60,20 @@ module Hash = {
     "sassy",
     "steadfast",
     "ubiquitous",
+    "ludicrious",
+    "silly",
+    "whimsical",
+    "priceless",
+    "redundant",
+    "inevitable",
+    "historic",
+    "epic",
+    "faulty",
+    "unique",
+    "toxic",
+    "insidious",
+    "magnificent",
+    "artistic",
   ]
 
   let nounList = [
@@ -75,7 +85,6 @@ module Hash = {
     "tomato",
     "bear",
     "towel",
-    "car",
     "cat",
     "mouse",
     "dog",
@@ -118,6 +127,14 @@ module Hash = {
     "letter",
     "spell",
     "border",
+    "channel",
+    "station",
+    "vase",
+    "tree",
+    "drug",
+    "unicorn",
+    "door",
+    "art",
   ]
 
   let colorList = [
