@@ -25,35 +25,26 @@ module Styles = {
 
 @react.component
 let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
-  let (currentTrack, setCurrentTrack) = React.useState(() => state.currentTrack)
+  let (currentTrack, setCurrentTrack) = React.useState(() => None)
 
   // get Spotify data
   React.useEffect0(() => {
     switch Spotify.Token.get(socket) {
-    | Some(token) => {
-        Spotify.getPlayer(token)
-        |> Js.Promise.then_(player => {
-          dispatch(ClientState.UpdatePlayer(player))
-          Js.Promise.resolve(player)
-        })
-        |> ignore
-
-        Spotify.getUser(token)
-        |> Js.Promise.then_(user => {
-          dispatch(ClientState.UpdateSpotifyUser(user))
-          Js.Promise.resolve(user)
-        })
-        |> ignore
-      }
+    | Some(token) => Spotify.getUser(token)
+      |> Js.Promise.then_(user => {
+        dispatch(ClientState.UpdateSpotifyUser(user))
+        Js.Promise.resolve(user)
+      })
+      |> ignore
     | None => ()
     }
 
     None
   })
 
-  React.useEffect1(() => {
+  React.useEffect2(() => {
     switch (Spotify.Token.get(socket), state.currentTrack, currentTrack) {
-    | (Some(token), Some(server), Some(local)) =>
+    | (Some(token), Some(server), Some(local: Types.currentTrack)) =>
       if local.track.track.id !== server.track.track.id {
         Spotify.playTrack(token, server.track.track.uri, 0.0)->ignore
         setCurrentTrack(_ => state.currentTrack)
@@ -65,7 +56,7 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
     | _ => ()
     }
     None
-  }, [state.currentTrack])
+  }, (state.currentTrack, state.player))
 
   <>
     <div className=Styles.header> <SearchComponent socket dispatch state /> </div>

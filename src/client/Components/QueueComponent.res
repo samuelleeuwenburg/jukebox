@@ -18,6 +18,7 @@ module Styles = {
     width(pct(100.0)),
     alignItems(center),
     padding3(~top=zero, ~h=zero, ~bottom=px(10)),
+    listStyleType(none),
     media(
       "(min-width: 640px)",
       list{

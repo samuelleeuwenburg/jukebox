@@ -1,6 +1,6 @@
 let baseUrl = "https://api.spotify.com/v1"
 let clientId = "4f8a771ca0aa41b28424ad9fc737dacc"
-let scopes = "user-modify-playback-state user-read-playback-state user-read-private user-read-email"
+let scopes = "user-modify-playback-state user-read-playback-state"
 
 module Token = {
   type tokenResponse = {
@@ -356,7 +356,45 @@ let playTrack = (token: string, songUri: string, positionMs: float) => {
       (),
     ),
   ) |> then_(Fetch.Response.json)
-  //@TODO: return something back to the application?
+}
+
+let getDevices = (token: string) => {
+  let url = baseUrl ++ "/me/player/devices"
+
+  open Js.Promise
+  Fetch.fetchWithInit(
+    url,
+    Fetch.RequestInit.make(
+      ~method_=Get,
+      ~headers=Fetch.HeadersInit.make({
+        "Authorization": "Bearer " ++ token,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      }),
+      (),
+    ),
+  ) |> then_(Fetch.Response.json)
+}
+
+let transferPlayback = (token: string, deviceId: string) => {
+  let url = baseUrl ++ "/me/player"
+  let payload = Js.Dict.empty()
+
+  Js.Dict.set(payload, "device_ids", Js.Json.array([Js.Json.string(deviceId)]))
+
+  Fetch.fetchWithInit(
+    url,
+    Fetch.RequestInit.make(
+      ~method_=Put,
+      ~body=Fetch.BodyInit.make(Js.Json.stringify(Js.Json.object_(payload))),
+      ~headers=Fetch.HeadersInit.make({
+        "Authorization": "Bearer " ++ token,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      }),
+      (),
+    ),
+  )
 }
 
 module Track = {

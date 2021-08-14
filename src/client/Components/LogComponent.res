@@ -83,7 +83,7 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
   | None => React.null
   | Some(logs) => {
       let logs = logs->Belt.Array.map(log => {
-        <div>
+        <div key={log.timestamp->Belt.Float.toString}>
           <span className=Styles.timestamp> {React.string(log.timestamp->toReadable)} </span>
           <span className=Styles.message> <Message message=log.message /> </span>
         </div>
