@@ -26,8 +26,8 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
 
   // listen for new user list
   React.useEffect1(() => {
-    socket->SocketIO.on(Types.Socket.SendUserList, handleNewUserList)
-    Some(() => socket->SocketIO.off(Types.Socket.SendUserList, handleNewUserList))
+    socket->SocketIO.on(SocketIO.SendUserList, handleNewUserList)
+    Some(() => socket->SocketIO.off(SocketIO.SendUserList, handleNewUserList))
   }, [handleNewUserList])
 
   let content = switch state.userList {

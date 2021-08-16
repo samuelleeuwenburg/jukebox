@@ -124,7 +124,7 @@ module Track = {
     let image = track.track->Spotify.Track.getImage
     let voteTrack = React.useCallback1(() => {
       if !hasVoted {
-        socket->SocketIO.emit2(Types.Socket.TrackVote, spotifyUser, track) |> ignore
+        socket->SocketIO.emit2(SocketIO.TrackVote, spotifyUser, track) |> ignore
       }
     }, [hasVoted])
 

@@ -108,19 +108,3 @@ module Track = {
     }
   }
 }
-
-module Socket = {
-  type t =
-    | SendLog
-    | RequestUser
-    | SendUser
-    | SendUserList
-    | RequestRefreshToken
-    | SendRefreshToken
-    | RequestAccessToken
-    | SendAccessToken
-    | RequestQueue
-    | SendQueue
-    | TrackAdd
-    | TrackVote
-}

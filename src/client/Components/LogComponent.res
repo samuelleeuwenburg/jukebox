@@ -67,8 +67,8 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
   }, [dispatch])
 
   React.useEffect1(() => {
-    socket->SocketIO.on(Types.Socket.SendLog, handleNewLog)
-    Some(() => socket->SocketIO.off(Types.Socket.SendLog, handleNewLog))
+    socket->SocketIO.on(SocketIO.SendLog, handleNewLog)
+    Some(() => socket->SocketIO.off(SocketIO.SendLog, handleNewLog))
   }, [handleNewLog])
 
   React.useEffect1(() => {

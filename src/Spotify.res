@@ -76,10 +76,11 @@ module Token = {
     ) {
     | (Some(expiresAt), Some(accessToken), Some(refreshToken)) => {
         if Js.Date.now() >= expiresAt {
-          socket->SocketIO.emit("requestNewAccessToken", refreshToken)
+          socket->SocketIO.emit(SocketIO.RequestAccessToken, refreshToken)
+          None
+        } else {
+          Some(accessToken)
         }
-
-        Some(accessToken)
       }
     | _ => None
     }

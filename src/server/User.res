@@ -295,24 +295,24 @@ module Conn = {
       | Some(user) => {
           ServerState.RemoveUser(user)->dispatch->ignore
           let state: ServerState.state = ServerState.log(Types.Log.UserLeft(user))->dispatch
-          io->SocketIO.Server.emit(Types.Socket.SendUserList, state.users)
-          io->SocketIO.Server.emit(Types.Socket.SendLog, state.log)
+          io->SocketIO.Server.emit(SocketIO.SendUserList, state.users)
+          io->SocketIO.Server.emit(SocketIO.SendLog, state.log)
         }
       | None => ()
       }
     })
 
-    socket->SocketIO.on(Types.Socket.RequestUser, (user: Spotify.user) => {
+    socket->SocketIO.on(SocketIO.RequestUser, (user: Spotify.user) => {
       let user = user->fromSpotifyUser
       userRef := Some(user)
 
       ServerState.AddUser(user)->dispatch->ignore
       let state: ServerState.state = ServerState.log(Types.Log.UserJoined(user))->dispatch
 
-      socket->SocketIO.emit(Types.Socket.SendUser, user)
+      socket->SocketIO.emit(SocketIO.SendUser, user)
 
-      io->SocketIO.Server.emit(Types.Socket.SendUserList, state.users)
-      io->SocketIO.Server.emit(Types.Socket.SendLog, state.log)
+      io->SocketIO.Server.emit(SocketIO.SendUserList, state.users)
+      io->SocketIO.Server.emit(SocketIO.SendLog, state.log)
     })
   }
 }

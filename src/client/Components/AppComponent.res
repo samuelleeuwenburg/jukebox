@@ -21,20 +21,20 @@ let make = (~socket: SocketIO.socket) => {
 
   // listen for new access token
   React.useEffect1(() => {
-    socket->SocketIO.on2(Types.Socket.SendAccessToken, handleNewAccessToken)
-    Some(() => socket->SocketIO.off(Types.Socket.SendAccessToken, handleNewAccessToken))
+    socket->SocketIO.on2(SocketIO.SendAccessToken, handleNewAccessToken)
+    Some(() => socket->SocketIO.off(SocketIO.SendAccessToken, handleNewAccessToken))
   }, [handleNewAccessToken])
 
   // get initial queue
   React.useEffect0(() => {
-    socket->SocketIO.emit(Types.Socket.RequestQueue, ())
+    socket->SocketIO.emit(SocketIO.RequestQueue, ())
     None
   })
 
   // add spotify user
   React.useEffect1(() => {
     switch state.spotifyUser {
-    | Some(user) => socket->SocketIO.emit(Types.Socket.RequestUser, user)
+    | Some(user) => socket->SocketIO.emit(SocketIO.RequestUser, user)
     | None => ()
     }
     None
@@ -42,14 +42,14 @@ let make = (~socket: SocketIO.socket) => {
 
   // listen for new queue
   React.useEffect1(() => {
-    socket->SocketIO.on(Types.Socket.SendQueue, handleNewQueue)
-    Some(() => socket->SocketIO.off(Types.Socket.SendQueue, handleNewQueue))
+    socket->SocketIO.on(SocketIO.SendQueue, handleNewQueue)
+    Some(() => socket->SocketIO.off(SocketIO.SendQueue, handleNewQueue))
   }, [handleNewQueue])
 
   // listen for new user
   React.useEffect1(() => {
-    socket->SocketIO.on(Types.Socket.SendUser, handleNewUser)
-    Some(() => socket->SocketIO.off(Types.Socket.SendUser, handleNewUser))
+    socket->SocketIO.on(SocketIO.SendUser, handleNewUser)
+    Some(() => socket->SocketIO.off(SocketIO.SendUser, handleNewUser))
   }, [handleNewUser])
 
   // setup tick

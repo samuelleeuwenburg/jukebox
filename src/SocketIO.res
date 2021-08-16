@@ -1,3 +1,17 @@
+type message =
+| SendLog
+| RequestUser
+| SendUser
+| SendUserList
+| RequestRefreshToken
+| SendRefreshToken
+| RequestAccessToken
+| SendAccessToken
+| RequestQueue
+| SendQueue
+| TrackAdd
+| TrackVote
+
 type conn = {id: string}
 
 type socket = {conn: conn}

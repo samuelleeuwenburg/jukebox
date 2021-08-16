@@ -1,6 +1,6 @@
 module Conn = {
   let handle = (io, socket, getState, dispatch) => {
-    socket->SocketIO.on2(Types.Socket.TrackVote, (. user, track) => {
+    socket->SocketIO.on2(SocketIO.TrackVote, (. user, track) => {
       let user = user->User.fromSpotifyUser
 
       ServerState.VoteOnTrack(track, user)->dispatch->ignore
@@ -14,11 +14,11 @@ module Conn = {
         })
       }
 
-      io->SocketIO.Server.emit(Types.Socket.SendQueue, json)
-      io->SocketIO.Server.emit(Types.Socket.SendLog, state.log)
+      io->SocketIO.Server.emit(SocketIO.SendQueue, json)
+      io->SocketIO.Server.emit(SocketIO.SendLog, state.log)
     })
 
-    socket->SocketIO.on2(Types.Socket.TrackAdd, (. user, track) => {
+    socket->SocketIO.on2(SocketIO.TrackAdd, (. user, track) => {
       let user = user->User.fromSpotifyUser
       let track = track->Types.Track.fromSpotifyTrack(user)
 
@@ -33,11 +33,11 @@ module Conn = {
         })
       }
 
-      io->SocketIO.Server.emit(Types.Socket.SendQueue, json)
-      io->SocketIO.Server.emit(Types.Socket.SendLog, state.log)
+      io->SocketIO.Server.emit(SocketIO.SendQueue, json)
+      io->SocketIO.Server.emit(SocketIO.SendLog, state.log)
     })
 
-    socket->SocketIO.on(Types.Socket.RequestQueue, _ => {
+    socket->SocketIO.on(SocketIO.RequestQueue, _ => {
       let state: ServerState.state = getState()
 
       let json = {
@@ -48,7 +48,7 @@ module Conn = {
         })
       }
 
-      socket->SocketIO.emit(Types.Socket.SendQueue, json)
+      socket->SocketIO.emit(SocketIO.SendQueue, json)
     })
   }
 }

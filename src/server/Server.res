@@ -51,7 +51,7 @@ server->Http.listen(3000, () => {
           })
         }
 
-        io->SocketIO.Server.emit(Types.Socket.SendQueue, json)
+        io->SocketIO.Server.emit(SocketIO.SendQueue, json)
       }
     | _ => ()
     }

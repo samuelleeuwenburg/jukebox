@@ -53,8 +53,8 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
 
   // listen for new refresh tokens
   React.useEffect1(() => {
-    socket->SocketIO.on3(Types.Socket.SendRefreshToken, handleNewTokens)
-    Some(() => socket->SocketIO.off(Types.Socket.SendRefreshToken, handleNewTokens))
+    socket->SocketIO.on3(SocketIO.SendRefreshToken, handleNewTokens)
+    Some(() => socket->SocketIO.off(SocketIO.SendRefreshToken, handleNewTokens))
   }, [handleNewTokens])
 
   // request spotify refresh tokens after login
@@ -63,23 +63,27 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
 
     switch url.search->make->get("code") {
     | None => ()
-    | Some(code) => socket->SocketIO.emit2(Types.Socket.RequestRefreshToken, Utils.origin, code)
+    | Some(code) => socket->SocketIO.emit2(SocketIO.RequestRefreshToken, Utils.origin, code)
     }
 
     None
   }, [url.search])
 
-  let getDevices = React.useCallback1(() => {
-    switch Spotify.Token.get(socket) {
-    | Some(token) => Spotify.getDevices(token)->Js.Promise.then_(json => {
+  let getDevices = React.useCallback1((token) => {
+      Spotify.getDevices(token)->Js.Promise.then_(json => {
         open Json.Decode
         let devices = json |> field("devices", array(Spotify.Decode.device))
         ClientState.UpdateDevices(devices)->dispatch
         Js.Promise.resolve(devices)
       }, _)->ignore
+  }, [dispatch])
+
+  let getDevicesAndToken = React.useCallback1(() => {
+    switch Spotify.Token.get(socket) {
+        | Some(token) => getDevices(token)
     | None => ()
     }
-  }, [dispatch])
+  }, [getDevices])
 
   let transferPlayback = React.useCallback1(id => {
     switch Spotify.Token.get(socket) {
@@ -103,8 +107,9 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
 
   // get Spotify devices
   React.useEffect2(() => {
-    getDevices()
-    None
+    getDevicesAndToken()
+    socket->SocketIO.on(SocketIO.SendAccessToken, getDevices)
+    Some(() => socket->SocketIO.off(SocketIO.SendAccessToken, getDevices))
   }, (dispatch, refreshToken))
 
   let components = switch (state.devices, refreshToken) {
@@ -134,7 +139,7 @@ let make = (~dispatch, ~socket: SocketIO.socket, ~state: ClientState.state) => {
       } else {
         <>
           <h1> {React.string("No devices found, is Spotify running?")} </h1>
-          <a className=Styles.button onClick={_ => getDevices()}>
+          <a className=Styles.button onClick={_ => getDevicesAndToken()}>
             {React.string("Sorry, it is now!")}
           </a>
         </>

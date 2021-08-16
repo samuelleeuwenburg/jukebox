@@ -158,7 +158,7 @@ module Track = {
 
     let addTrack = React.useCallback0(() => {
       dispatch(ClientState.ClearSearch)
-      socket->SocketIO.emit2(Types.Socket.TrackAdd, user, track) |> ignore
+      socket->SocketIO.emit2(SocketIO.TrackAdd, user, track) |> ignore
     })
 
     <li className=Styles.trackContainer onClick={_ => addTrack()}>
