@@ -115,10 +115,10 @@ let update = (state: state, action: action) =>
       ...state,
       tracks: state.tracks->Js.Array2.filter((track: Types.track) => track.track.id != trackId),
     }
-  | VoteOnTrack(track, user) => {
+  | VoteOnTrack(votedTrack, user) => {
       ...state,
-      tracks: state.tracks->Belt.Array.map((t: Types.track) =>
-        if t.track.id == track.track.id && t.upvotes->Belt.Array.some(u => u.id != user.id) {
+      tracks: state.tracks->Belt.Array.map((track: Types.track) =>
+        if track.track.id == votedTrack.track.id && track.upvotes->Belt.Array.some(u => u.id != user.id) {
           {
             ...track,
             upvotes: track.upvotes->Belt.Array.concat([user]),
